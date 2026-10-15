@@ -20,7 +20,7 @@ The first road generation on a new world blocks server startup until it finishes
 
 Signs carry English fallback text, so a vanilla client shows "Next Location 847 m" instead of a translation key.
 
-Known gap at world spawn: vanilla generates the chunks around spawn while it looks for a spawn point, and that happens before RoadWeaver plans the network. On a new world the road from spawn therefore starts one or two chunks away, and `roadAppearance.spawnCabinEnabled` has no effect because the cabin can only be added to chunks that are generated later.
+On a new world the network is planned at the very start of vanilla's spawn search. Vanilla generates the chunks around spawn while it searches, so planning any later would leave them without roads. The plan is centred on the point where that search starts, and the spawn cabin is built straight into the world once the spawn chunks exist. Expect it a few blocks from the world spawn. On the test seed the spawn is 0 107 0 and the cabin corner is 8 106 8.
 
 ## The command
 
