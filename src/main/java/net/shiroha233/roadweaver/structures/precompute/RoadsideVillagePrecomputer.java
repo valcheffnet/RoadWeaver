@@ -392,9 +392,10 @@ public final class RoadsideVillagePrecomputer {
                 continue;
             }
 
-            // currentHeight is the first air block above the ground; house foundations belong in the top ground
-            // block, as in vanilla villages, otherwise every house stands one block too high.
-            BlockPos anchor = new BlockPos(probe.anchorX(), currentHeight - 1, probe.anchorZ());
+            // Like vanilla JigsawPlacement: the house jigsaw goes to the first free height at the connection point
+            // itself, not to the footprint mean, which on a slope leaves houses sunk or raised.
+            int anchorY = cache.getAccurateSampler(level).surfaceHeight(probe.anchorX(), probe.anchorZ());
+            BlockPos anchor = new BlockPos(probe.anchorX(), anchorY, probe.anchorZ());
             BoundingBox footprint = slotBounds(anchor, footprintRadius);
             if (intersectsAny(footprint, occupied, 1)) {
                 idx++;

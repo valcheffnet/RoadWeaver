@@ -54,9 +54,15 @@ The structure is placed beside the road (offset plus half its size), and on a hi
 
 The sakura coffee house was the worst case: with a 12x12 hint and `beard_thin`, we saw it hang up to 9 blocks above a slope. We set every hint to the real template size.
 
-### 7. Roadside village houses stand one block too high
+### 7. Roadside village houses end up sunk or raised
 
-RoadWeaver's heights are "first air block above the ground", which is the top ground block plus one. `RoadsideVillagePrecomputer` puts the jigsaw anchor of each house at that height, so the cobblestone foundation of a vanilla house ends up on top of the grass. The beard then builds a one-block dirt step under it. Vanilla villages keep that foundation in the top ground block. We lowered the slot anchor by one.
+Two things combine here, both in how `RoadsideVillageJigsawPlanner` and `RoadsideVillagePrecomputer` place a house next to the road.
+
+The ground level delta. The beard shapes the terrain around a rigid piece towards `minY + groundLevelDelta`. The planner always passes the template default, `element.getGroundLevelDelta()`, which is 1. Vanilla `JigsawPlacement` instead derives the delta of a rigid child from where its entrance jigsaw sits (`parentDelta - (parentJigsawY - childJigsawY)`). In the vanilla plains houses the entrance jigsaw is at y 0 when the house has a front step (the stairs), at y 1 for most others and at y 2 in a few. With a fixed delta of 1, houses with a step got the ground raised one block around them and looked sunk, and houses with the entrance at y 2 got it lowered and looked raised. We pass the entrance jigsaw's height as the delta instead (the anchor height minus the piece position in the fallback path).
+
+The anchor height. The precomputer uses the mean height of the whole footprint as the anchor, while vanilla uses `getFirstFreeHeight()` at the connection point. On a slope the two differ. We take the surface height at the anchor itself and keep the mean for the slope and step checks. The fallback (no jigsaw faces the road) also put the template's bottom layer at the anchor; it now uses the height of the horizontal entrance jigsaw, like the main path.
+
+With both changes, 10 of 12 measurable house entrances near spawn had the ground right outside at exactly one block below the entrance, for entrances at y 0, 1 and 2. The other two were one block off on uneven ground.
 
 ### 8. The campsites have ground layers but are not sunk
 

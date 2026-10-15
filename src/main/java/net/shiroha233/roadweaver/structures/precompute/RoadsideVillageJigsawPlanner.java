@@ -143,11 +143,14 @@ public final class RoadsideVillageJigsawPlanner {
                     continue;
                 }
 
+                // Ground for the beard = the anchor (first free height): the entrance jigsaw's height in the template.
+                // Vanilla derives the delta of a rigid child the same way instead of using the template default (1),
+                // which sank houses with a front step and raised houses whose entrance is above y 1.
                 return Optional.of(new PoolElementStructurePiece(
                     templateManager,
                     element,
                     position,
-                    element.getGroundLevelDelta(),
+                    jigsaw.pos().getY(),
                     rotation,
                     box,
                     JigsawStructure.DEFAULT_LIQUID_SETTINGS
@@ -162,9 +165,18 @@ public final class RoadsideVillageJigsawPlanner {
             }
 
             BoundingBox zeroBox = templateBounds.get();
+            // Same height rule as the jigsaw path above (and vanilla JigsawPlacement): the entrance jigsaw (the
+            // horizontal one; "bottom" jigsaws point up) sits at the anchor, the first air block above the ground.
+            // Vanilla houses with a front step have it at y 0, the others at door level. Templates without an
+            // entrance jigsaw keep their bottom layer at the anchor.
+            int baseOffset = safeJigsawBlocks(templateManager, element, rotation, random).stream()
+                .filter(jigsaw -> JigsawBlock.getFrontFacing(jigsaw.state()).getAxis().isHorizontal())
+                .mapToInt(jigsaw -> jigsaw.pos().getY())
+                .min()
+                .orElse(zeroBox.minY());
             BlockPos position = new BlockPos(
                 slot.anchor().getX() - (zeroBox.minX() + zeroBox.maxX()) / 2,
-                slot.anchor().getY() - zeroBox.minY(),
+                slot.anchor().getY() - baseOffset,
                 slot.anchor().getZ() - (zeroBox.minZ() + zeroBox.maxZ()) / 2
             );
             Optional<BoundingBox> maybeBox = safeBoundingBox(templateManager, element, position, rotation);
@@ -180,7 +192,7 @@ public final class RoadsideVillageJigsawPlanner {
                 templateManager,
                 element,
                 position,
-                element.getGroundLevelDelta(),
+                slot.anchor().getY() - position.getY(),
                 rotation,
                 box,
                 JigsawStructure.DEFAULT_LIQUID_SETTINGS
