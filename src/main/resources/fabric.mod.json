@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "roadweaver",
+	"version": "${version}",
+	"name": "RoadWeaver (server-side)",
+	"description": "Generates roads between villages and other structures. Server-side only fork of RoadWeaver: vanilla clients can join without the mod.",
+	"authors": [
+		"shiroha233"
+	],
+	"contributors": [
+		"Countered (settlement-roads-new, CC0-1.0)",
+		"SasnycoN (26.3 server-side port)"
+	],
+	"contact": {
+		"homepage": "https://github.com/shiroha-233/RoadWeaver",
+		"sources": "https://github.com/shiroha-233/RoadWeaver"
+	},
+	"license": "MIT",
+	"icon": "assets/roadweaver/icon.png",
+	"environment": "server",
+	"entrypoints": {
+		"main": [
+			"net.shiroha233.roadweaver.RoadWeaver"
+		]
+	},
+	"mixins": [
+		"roadweaver.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.0",
+		"fabric-api": "*",
+		"minecraft": "~${minecraft_version}",
+		"java": ">=${java_version}"
+	}
+}

@@ -1,77 +1,12 @@
-// 文件职责：定义多加载器 Gradle 工程的仓库与按任务裁剪的子项目装配规则。
 pluginManagement {
 	repositories {
-		gradlePluginPortal()
-
-		maven {
-			name = 'Architectury'
-			url = 'https://maven.architectury.dev/'
-		}
 		maven {
 			name = 'Fabric'
 			url = 'https://maven.fabricmc.net/'
 		}
-		maven {
-			name = 'Forge'
-			url = 'https://maven.minecraftforge.net/'
-		}
-
 		mavenCentral()
-
-		maven { url = 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
-		maven { url = 'https://maven.aliyun.com/repository/public/' }
-		maven { url = 'https://repo.huaweicloud.com/repository/maven/' }
+		gradlePluginPortal()
 	}
 }
 
-dependencyResolutionManagement {
-	repositories {
-		maven { url = 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
-		maven { url = 'https://maven.aliyun.com/repository/public/' }
-		maven { url = 'https://repo.huaweicloud.com/repository/maven/' }
-
-		mavenCentral()
-		maven { url = 'https://maven.fabricmc.net/' }
-		maven { url = 'https://maven.architectury.dev/' }
-		maven { url = 'https://api.modrinth.com/maven' }
-		maven { url = 'https://maven.minecraftforge.net/' }
-		maven { url = 'https://maven.neoforged.net/releases/' }
-		maven { url = 'https://bmclapi2.bangbang93.com/maven/' }
-
-		exclusiveContent {
-			forRepository {
-				maven {
-					name = 'Forge'
-					url = 'https://maven.minecraftforge.net/'
-				}
-			}
-			filter {
-				includeGroup 'net.minecraftforge'
-				includeGroupByRegex 'net\\.minecraftforge\\..*'
-			}
-		}
-	}
-}
-
-rootProject.name = 'roadweaver'
-
-def requestedTaskRoots = gradle.startParameter.taskNames
-	.collect { taskName ->
-		taskName.tokenize(':').find { !it.isBlank() }
-	}
-	.findAll { it != null }
-	.toSet()
-
-def includeFabric = requestedTaskRoots.isEmpty() || requestedTaskRoots.contains('fabric')
-def includeNeoForge = requestedTaskRoots.isEmpty() || requestedTaskRoots.contains('neoforge')
-def includeAllLoaders = requestedTaskRoots.isEmpty() || (!includeFabric && !includeNeoForge)
-
-include 'common'
-
-if (includeFabric || includeAllLoaders) {
-	include 'fabric'
-}
-
-if (includeNeoForge || includeAllLoaders) {
-	include 'neoforge'
-}
+rootProject.name = 'roadweaver-server'

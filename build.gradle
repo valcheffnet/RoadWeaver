@@ -1,115 +1,60 @@
-// 根项目配置 - 多模块项目
 plugins {
-	id 'architectury-plugin' version '3.4-SNAPSHOT'
-	id 'dev.architectury.loom' version '1.7-SNAPSHOT' apply false
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
-architectury {
-	minecraft = '1.21.1'
+base {
+	archivesName = 'roadweaver-server'
 }
 
-def legacyIdeOutputDirs = [
-	file('common/bin'),
-	file('fabric/bin'),
-	file('neoforge/bin')
+loom {
+	// Server-side only: compile against the server jar so any client class reference fails the build.
+	serverOnlyMinecraftJar()
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+def templateProps = [
+	version          : project.version,
+	minecraft_version: project.minecraft_version,
+	java_version     : project.java_version,
 ]
 
-tasks.register('cleanLegacyIdeOutputs', Delete) {
-	description = 'Deletes stale IDE output directories that can shadow Gradle build outputs at dev runtime.'
-	delete legacyIdeOutputDirs
-}
-
-allprojects {
-	apply plugin: 'java'
-	apply plugin: 'architectury-plugin'
-	
-	group = 'net.shiroha233.roadweaver'
-	version = '2.3.2-1.21.1'
-	
-	repositories {
-		maven { url = 'https://maven.architectury.dev/' }
-		maven { url = 'https://maven.fabricmc.net/' }
-		maven { url = 'https://maven.minecraftforge.net/' }
-		maven { url = 'https://maven.shedaniel.me/' }
-		maven { url = 'https://maven.terraformersmc.com/' }
-        // curseforge与modrinth平台仓库
-        exclusiveContent {
-            forRepository {
-                maven {
-                    name = 'CurseMaven'
-                    url = 'https://cursemaven.com'
-                }
-            }
-            filter {
-                includeGroup 'curse.maven'
-            }
-        }
-        exclusiveContent {
-            forRepository {
-                maven {
-                    name = 'Modrinth'
-                    url = 'https://api.modrinth.com/maven'
-                }
-            }
-            filter {
-                includeGroup 'maven.modrinth'
-            }
-        }
-		mavenCentral()
-	}
-	
-	tasks.withType(JavaCompile).configureEach {
-		options.encoding = 'UTF-8'
-		options.release = 21
-	}
-	
-	java {
-		toolchain {
-			languageVersion = JavaLanguageVersion.of(21)
-		}
-		withSourcesJar()
-	}
-	
-	// Gradle toolchain 默认只影响编译任务；runClient/Transformer 属于 JavaExec，
-	// 这里强制所有 JavaExec 使用 Java 21 launcher，保证开发运行环境一致。
-	tasks.withType(JavaExec).configureEach {
-		javaLauncher = javaToolchains.launcherFor {
-			languageVersion = JavaLanguageVersion.of(21)
-		}
-		// 设置运行游戏时的玩家名称
-		systemProperty 'minecraft.username', rootProject.properties.getOrDefault('minecraft_username', 'Player')
+processResources {
+	inputs.properties templateProps
+	filesMatching(["fabric.mod.json", "*.mixins.json"]) {
+		expand templateProps
 	}
 }
 
-subprojects {
-	apply plugin: 'dev.architectury.loom'
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = 'UTF-8'
+	it.options.release = project.java_version as int
+	// Show every error, not just the first 100 (the port touches many files at once).
+	it.options.compilerArgs += ['-Xmaxerrs', '10000']
+}
 
-	tasks.named('clean').configure {
-		dependsOn rootProject.tasks.named('cleanLegacyIdeOutputs')
-	}
+tasks.withType(Test).configureEach {
+	useJUnitPlatform()
+}
 
-	tasks.withType(JavaExec).configureEach {
-		dependsOn rootProject.tasks.named('cleanLegacyIdeOutputs')
+java {
+	sourceCompatibility = JavaVersion.toVersion(project.java_version)
+	targetCompatibility = JavaVersion.toVersion(project.java_version)
+	withSourcesJar()
+}
+
+jar {
+	from("LICENSE") {
+		rename { "LICENSE_roadweaver" }
 	}
-	
-	base {
-		archivesName = "${rootProject.name}-${project.name}"
-	}
-	
-	loom {
-		silentMojangMappingsLicense()
-	}
-	
-	dependencies {
-		minecraft "com.mojang:minecraft:1.21.1"
-		mappings loom.officialMojangMappings()
-	}
-	
-	// 配置runClient任务，设置固定的玩家名称（仅 Fabric）
-	if (project.name == 'fabric') {
-		tasks.named('runClient', JavaExec).configure {
-			def username = rootProject.properties.getOrDefault('minecraft_username', 'Player')
-			args '--username', username
-		}
+	from("NOTICE") {
+		rename { "NOTICE_roadweaver" }
 	}
 }
