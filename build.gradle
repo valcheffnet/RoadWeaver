@@ -42,6 +42,8 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(Test).configureEach {
 	useJUnitPlatform()
+	// StructureTemplateUpgradeTool only runs when asked: -Droadweaver.upgradeTemplates=true
+	systemProperty 'roadweaver.upgradeTemplates', System.getProperty('roadweaver.upgradeTemplates', 'false')
 }
 
 java {

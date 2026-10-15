@@ -1,6 +1,8 @@
 package net.shiroha233.roadweaver;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.shiroha233.roadweaver.command.RoadWeaverCommand;
 import net.shiroha233.roadweaver.config.ConfigService;
 import net.shiroha233.roadweaver.features.config.RoadFeatureRegistry;
 import net.shiroha233.roadweaver.persistence.attachments.WorldDataAttachment;
@@ -29,6 +31,9 @@ public class RoadWeaver implements ModInitializer {
         LOGGER.info("Structure types registered");
         
         RoadFeatureRegistry.register();
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
+                RoadWeaverCommand.register(dispatcher));
         
         ServerPlanningHooks.register();
     }
