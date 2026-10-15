@@ -392,7 +392,9 @@ public final class RoadsideVillagePrecomputer {
                 continue;
             }
 
-            BlockPos anchor = new BlockPos(probe.anchorX(), currentHeight, probe.anchorZ());
+            // currentHeight is the first air block above the ground; house foundations belong in the top ground
+            // block, as in vanilla villages, otherwise every house stands one block too high.
+            BlockPos anchor = new BlockPos(probe.anchorX(), currentHeight - 1, probe.anchorZ());
             BoundingBox footprint = slotBounds(anchor, footprintRadius);
             if (intersectsAny(footprint, occupied, 1)) {
                 idx++;

@@ -1,0 +1,105 @@
+# RoadWeaver 2.3.2: bugs found while porting to Minecraft 26.3
+
+We ported RoadWeaver 2.3.2 (branch `1.21.1-Architectury`, commit `9b76a41`) to Fabric 26.3 as a server-side only build, so players can join with an unmodded client. That is close to what #53 asks for, and it also touches #81 and #85. While testing it on a dedicated server we ran into a number of bugs. Most of them are in the 1.21.x code and data too, so we are listing them here together with what we changed.
+
+Every item in the first section was checked against both `1.21.1-Architectury` (`9b76a41`) and `1.21.11-Architectury` (`593bbed`). We searched the issue tracker on 2026-10-15 and found none of them reported. #95 (floating arches) shows a road climbing into the sky, which looks like a different problem.
+
+## Bugs in the 1.21.x branches
+
+### 1. The grave templates cannot be found on 1.21+
+
+The five grave templates (`easter_egg`, `fogg05`, `magic_muggle`, `notch`, `technoblade`) only exist under `data/roadweaver/structures/roadside/small/graves/`. Since 1.21 the game reads templates from `structure/` (singular), and the other templates were copied there, but the graves were not. The `roadside_grave_*` structures point at `roadweaver:roadside/small/graves/...`, so on 1.21.x they have no template to place.
+
+We moved the five files into `structure/roadside/small/graves/` and deleted the old `structures/` and `loot_tables/` folders, which were byte-for-byte copies of the singular ones.
+
+### 2. Two bridges use biome tags that do not exist
+
+`wood_bridge_huamu.json` uses `#minecraft:is_birch_forest` and `wood_bridge_hongshu.json` uses `#minecraft:is_mangrove`. Vanilla has neither tag. On 26.3 the server refuses to start with "Unbound tags in registry worldgen/biome". On 1.21.x we believe the tag just resolves to nothing, so these two bridges never match a biome.
+
+We replaced them with explicit lists: `["minecraft:birch_forest", "minecraft:old_growth_birch_forest"]` and `["minecraft:mangrove_swamp"]`.
+
+### 3. The item tags are in the old folder
+
+The five item tags (`dyes`, `glazed_terracotta`, `stained_glass`, `basic_redstone_component`, `advanced_redstone_component`) are in `tags/items/`. Since 1.21 the folder is `tags/item/`, so the tags are not loaded and the grave loot table entries that use `#roadweaver:stained_glass` and the other four tags have nothing to resolve to. We renamed the folder.
+
+### 4. The two advancements cannot load and cannot be earned
+
+`road_first_step_1/2.json` are in `advancements/`, which 1.21 renamed to `advancement/`. Even in the right folder they would not do much: the trigger is `minecraft:impossible`, nothing in the code grants them, and the lang files have no `adv.roadweaver.*` keys, so the title would show as a raw key. We moved them, changed the icon to the 1.21 format (`"id"` instead of `"item"`), added English fallback text and set them to hidden. They should probably either be wired up or removed.
+
+### 5. Roadside structures take the road's height, not the ground's
+
+In `RoadsideStructurePrecomputer`, the height of a roadside structure is the road's target height for that segment:
+
+```java
+int baseHeight = (targetY != null && i < targetY.size()) ?
+    targetY.get(i) :
+    getHeight(placeX, placeZ, level, cache, terrain, heightmap, useBaseHeight);
+```
+
+The structure is placed beside the road (offset plus half its size), and on a hillside the ground there can be several blocks above or below the road. We found a grave whose base was at y 96 over ground at y 90 to 91. We now always use `getHeight(placeX, placeZ, ...)`, the predicted ground under the structure itself.
+
+### 6. Several size hints are smaller than their templates
+
+`size_hint` is used for the slope check and for the distance from the road. In six roadside structures it is smaller than the template, so the slope check misses part of the footprint and the structure can end up on the road or hanging over a slope.
+
+| Structure | size_hint | Template size |
+|---|---|---|
+| roadside_bench | 3, 2, 2 | 5, 4, 2 |
+| roadside_campfire | 3, 3, 3 | 6, 2, 6 |
+| roadside_campsite_1 | 12, 8, 12 | 18, 8, 18 |
+| roadside_campsite_2 | 12, 8, 12 | 18, 7, 17 |
+| roadside_campsite_3 | 10, 6, 10 | 8, 7, 14 |
+| roadside_maid_house | 10, 10, 12 | 12, 10, 11 |
+| roadside_sakura_coffee_house | 12, 10, 12 | 19, 13, 17 |
+
+The sakura coffee house was the worst case: with a 12x12 hint and `beard_thin`, we saw it hang up to 9 blocks above a slope. We set every hint to the real template size.
+
+### 7. Roadside village houses stand one block too high
+
+RoadWeaver's heights are "first air block above the ground", which is the top ground block plus one. `RoadsideVillagePrecomputer` puts the jigsaw anchor of each house at that height, so the cobblestone foundation of a vanilla house ends up on top of the grass. The beard then builds a one-block dirt step under it. Vanilla villages keep that foundation in the top ground block. We lowered the slot anchor by one.
+
+### 8. The campsites have ground layers but are not sunk
+
+The campsite templates carry their own ground. `roadside_campsite_2` and `_3` have a grass and dirt layer at y 0, and `roadside_campsite_1` has dirt at y 0 and grass at y 1. The graves already handle this with `"start_height": { "absolute": -1 }`, but the campsites have no `start_height` and sit one or two blocks above the terrain. We added -1 to campsites 2 and 3, and -2 to campsite 1.
+
+### 9. No road and no spawn cabin at world spawn
+
+On a new world, `MinecraftServer.createLevels()` calls `setInitialSpawn()`, which looks for a spawn point with `PlayerSpawnFinder.getSpawnPosInChunk` and `ServerLevel.getHeight`. That fully generates the chunks around spawn. RoadWeaver plans its first roads in a `prepareLevels` HEAD mixin, which runs after this, so the spawn chunks already exist without roads. The spawn cabin is queued as a pending structure, and it can only be injected into chunks that are still being generated, so it never appears.
+
+We confirmed this on 26.3: the four chunks around spawn had no road blocks and no cabin. The 1.21.1 code calls `setInitialSpawn` before `prepareLevels` in the same way, so we expect the same result there, but we did not run 1.21.1 to check.
+
+We moved the initial planning to the start of `setInitialSpawn` and centred it on the point where vanilla begins its search: the middle of `ChunkGenerator.getOrigin(randomState)`, with the height from `getBaseHeight`, so no chunk is generated yet. The cabin is built directly with the existing (unused) `SpawnCabinStructure.placeAt` once `setInitialSpawn` returns, one block into the ground. Before that it checks its footprint against structure pieces and the road and moves up to 32 blocks away if the spot is taken. Without that check we once had the cabin built inside a roadside village house.
+
+### 10. Structures with thin or no terrain adaptation can hang over slopes
+
+Even with correct heights, a template on a slope keeps some columns in the air: graves use `terrain_adaptation: none`, two structures use `beard_thin`, and the directly built cabin gets no adaptation. We added a step to `SimpleTemplatePiece.postProcess` that fills air under the bottom layer of the template down to the ground, at most 12 blocks deep, inside the processing box. It uses dirt, or the stone or sandstone underneath. On a fresh world every roadside structure near spawn then had no hanging columns.
+
+### 11. Empty refmap name
+
+`MixinConfigPlugin.getRefMapperConfig()` returns `""`. Mixin then tries to read a refmap with an empty name and logs `Invalid REFMAP JSON in : ... Expected BEGIN_OBJECT but was STRING`. Returning `null` keeps the default.
+
+### 12. One unit test fails on unchanged code
+
+`PathPostProcessorBoundsTest.staircaseSearchNodesProduceWidelySpacedCurveControls` fails with "grid staircases should not become Bezier control points at each step". Neither the test nor `PathPostProcessor` was changed in our port. The control point logic changed in `7cadbb7`, so the test may simply be out of date.
+
+## Things that break when moving to 26.x
+
+These only matter for a 26.x port, but they cost us time, so they may save you some.
+
+- Templates now store their palette with `id` and `properties` instead of `Name` and `Properties`. `BridgeTemplateStructureRegistry` parses `template.save()` by hand with the old keys, so every bridge block silently turns into air. `NbtUtils.readBlockState(BuiltInRegistries.BLOCK, tag)` reads it correctly.
+- `Beardifier.forStructuresInChunk` returns the shared `Beardifier.EMPTY` for chunks without structures. The road plan must not be attached to that instance.
+- `ConfiguredFeature` is gone. Features are records with a `MapCodec`, registered in `BuiltInRegistries.FEATURE_TYPE`, and the data folder is `worldgen/feature`.
+- Density functions are sampled with `sampleVolume` / `sampleValue` on a `DensitySampler`, and `compute(FunctionContext)` no longer exists. The old `initialDensityWithoutJaggedness` scan can be replaced by the router's `chunkSurfaceLevel`. For exact heights, vanilla `NoiseBasedChunkGenerator.iterateNoiseColumn` is a good model: a `NoiseChunk`, `cachingSamplers().get(finalDensity).sampleVolume(volume)` and then `aquifer().computeSubstance`.
+- Tag entries in loot tables use `"items": "#tag"` instead of `"name"`.
+- An unbound biome tag now stops the server instead of being ignored.
+- `RandomState.sampler()` is gone. `BiomeSource.createUncachedResolver(randomState)` covers the biome lookups.
+- The bundled templates were on DataVersion 3465 and 3955 and were upgraded on every load. We upgraded them once with the vanilla path (`DataFixTypes.STRUCTURE`, then `StructureTemplate.load` and `save`). The only block changes were the vanilla renames `grass` to `short_grass` and `chain` to `iron_chain`.
+- Inside `PlannedPathCache.PointBudgetLru`, which extends `LinkedHashMap`, the simple name `Entry` now resolves to `Map.Entry`, so the class needs `PlannedPathCache.Entry`.
+
+## Smaller notes
+
+- `roadside_maid_house` spawns `touhou_little_maid:maid`. Without that mod the server logs "Missing entity type touhou_little_maid:maid, skipping spawn rule" and builds the house without the mob. A mod-loaded check could skip the structure instead.
+- `PresetService.reload()` deletes any preset file whose `dimensions` is not exactly `["minecraft:overworld"]`. That is easy to lose work to; logging and skipping such a file would be safer.
+- `tags/worldgen/biome/has_biome_anchors.json` is still unused (#36).
+
+We are happy to share the changes as patches against `1.21.1-Architectury` if any of them are useful.

@@ -151,10 +151,9 @@ public final class RoadsideStructurePrecomputer {
             Heightmap.Types heightmap = structure.projectStartToHeightmap();
             boolean useBaseHeight = structure.useAccurateHeight();
 
-            // Calculate baseHeight based on structure definition
-            int baseHeight = (targetY != null && i < targetY.size()) ?
-                targetY.get(i) :
-                getHeight(placeX, placeZ, level, cache, terrain, heightmap, useBaseHeight);
+            // Ground under the structure itself. Upstream used the road's target height of this segment, but the
+            // structure sits beside the road and on a slope the ground there can be several blocks lower or higher.
+            int baseHeight = getHeight(placeX, placeZ, level, cache, terrain, heightmap, useBaseHeight);
 
             int placeY = baseHeight + startHeight;
 
