@@ -14,7 +14,22 @@ Roads are planned for terrain that has not been generated yet. Chunks that alrea
 
 ## What is different from upstream
 
-The client parts are gone: the road map on H (with teleport, search, notes and manual road linking), the structure picker, the preset editor, the loading screen overlay and the F9 debug overlay. The NeoForge build and the OpenCL (GPU) terrain sampler were removed as well, so terrain is always sampled on the CPU.
+Everything that needs the mod on the client is gone. In detail:
+
+| Removed | What it did upstream | Replacement here |
+|---|---|---|
+| Road network map on H | Map of roads and structures with teleport, search, notes and manual road linking | None. Roads are planned automatically. |
+| `/roadweaver mapaccess` and map sync | Who may open the map, plus the packets that fed the map | None. |
+| Structure picker screen | Choosing which structures get connected | `structurePrediction.structureWhitelist` and `structureBlacklist` in `roadweaver.json` |
+| Preset editor screen | Editing road surface presets | The JSON files in `config/roadweaver/presets/` |
+| Cloth Config screen, ModMenu entry, settings on the world creation screen | Editing the config in game | `roadweaver.json` and `/roadweaver reload` |
+| Loading screen overlay and tips | Progress of the first road generation | Progress lines in the server log |
+| F9 raw path debug overlay | Showed unprocessed path nodes | None. |
+| OpenCL (GPU) terrain sampler and the bundled LWJGL | Faster terrain sampling on a GPU | The CPU sampler, which was already the fallback |
+| NeoForge build, Architectury, Cloth Config dependency | Second loader and the shared platform layer | Fabric only |
+| Compat mixins for Oh The Trees You'll Grow, ReTerraForged, Dynamic Trees | Kept roads clear of those mods' trees | None. Those mods have no 26.3 builds. |
+
+The map's tile data (`data/roadweaver/map/` in the world) is still written, because road planning reads it. Nothing displays it.
 
 The first road generation on a new world blocks server startup until it finishes, as it does upstream. On a test world with the default config this took 91 seconds for 16 roads. Progress is printed to the server log every 10 seconds.
 
