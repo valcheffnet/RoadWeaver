@@ -3,7 +3,6 @@ package net.shiroha233.roadweaver.mixin.fabric;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.progress.ChunkProgressListener;
 import net.shiroha233.roadweaver.generation.InitialGenManager;
 import net.shiroha233.roadweaver.generation.RoadGenerationService;
 import net.shiroha233.roadweaver.persistence.sharded.RoadShardStorage;
@@ -18,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin {
     @Inject(method = "prepareLevels", at = @At("HEAD"))
-    private void roadweaver$preloadBeforePrepareLevels(ChunkProgressListener listener, CallbackInfo ci) {
+    private void roadweaver$preloadBeforePrepareLevels(CallbackInfo ci) {
         MinecraftServer server = (MinecraftServer)(Object)this;
         ServerLevel level = server.overworld();
         if (level == null) return;

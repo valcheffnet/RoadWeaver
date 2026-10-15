@@ -1,9 +1,15 @@
 {
   "parent": "minecraft:adventure/root",
   "display": {
-    "icon": { "item": "minecraft:stone_bricks" },
-    "title": { "translate": "adv.roadweaver.road_first_step_1.title" },
-    "description": { "translate": "adv.roadweaver.road_first_step_1.desc" },
+    "icon": {
+      "id": "minecraft:stone_bricks"
+    },
+    "title": {
+      "translate": "adv.roadweaver.road_first_step_1.title"
+    },
+    "description": {
+      "translate": "adv.roadweaver.road_first_step_1.desc"
+    },
     "frame": "task",
     "show_toast": true,
     "announce_to_chat": true,

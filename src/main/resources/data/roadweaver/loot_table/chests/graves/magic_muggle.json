@@ -56,23 +56,6 @@
 			"entries": [
 				{
 					"type": "minecraft:tag",
-					"name": "roadweaver:basic_redstone_component",
-					"expand": true,
-					"functions": [
-						{
-							"function": "minecraft:set_count",
-							"count": {
-								"type": "minecraft:uniform",
-								"min": 1,
-								"max": 2
-							}
-						}
-					],
-					"weight": 4
-				},
-				{
-					"type": "minecraft:tag",
-					"name": "roadweaver:advanced_redstone_component",
 					"expand": true,
 					"functions": [
 						{
@@ -85,12 +68,29 @@
 						}
 					],
 					"weight": 4,
-					"quality": 0.3
+					"items": "#roadweaver:basic_redstone_component"
 				},
 				{
 					"type": "minecraft:tag",
-					"name": "minecraft:redstone_ores",
-					"expand": true
+					"expand": true,
+					"functions": [
+						{
+							"function": "minecraft:set_count",
+							"count": {
+								"type": "minecraft:uniform",
+								"min": 1,
+								"max": 2
+							}
+						}
+					],
+					"weight": 4,
+					"quality": 0.3,
+					"items": "#roadweaver:advanced_redstone_component"
+				},
+				{
+					"type": "minecraft:tag",
+					"expand": true,
+					"items": "#minecraft:redstone_ores"
 				}
 			]
 		}

@@ -1,8 +1,10 @@
 package net.shiroha233.roadweaver.mixin.fabric;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.feature.BambooFeature;
-import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
-import net.minecraft.world.level.levelgen.feature.configurations.ProbabilityFeatureConfiguration;
 import net.shiroha233.roadweaver.persistence.RoadPositionQuery;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,13 +16,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(BambooFeature.class)
 public class BambooFeatureMixin {
-
-    @Inject(method = "place(Lnet/minecraft/world/level/levelgen/feature/FeaturePlaceContext;)Z",
+    @Inject(method = "place(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z",
             at = @At("HEAD"), cancellable = true)
-    private void roadweaver$blockBambooOnRoad(FeaturePlaceContext<ProbabilityFeatureConfiguration> ctx,
-                                               CallbackInfoReturnable<Boolean> cir) {
+    private void roadweaver$blockBambooOnRoad(WorldGenLevel level, ChunkGenerator generator, RandomSource random, BlockPos origin,
+            CallbackInfoReturnable<Boolean> cir) {
         try {
-            if (RoadPositionQuery.isOnRoad(ctx.level(), ctx.origin())) {
+            if (RoadPositionQuery.isOnRoad(level, origin)) {
                 cir.setReturnValue(false);
             }
         } catch (Throwable ignored) {}

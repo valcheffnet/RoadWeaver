@@ -23,8 +23,8 @@ class WorldgenFingerprintServiceTest {
     static void bootstrapMinecraft() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
-        registries = VanillaRegistries.createLookup();
-        dataVersion = SharedConstants.getCurrentVersion().getDataVersion().getVersion();
+        registries = VanillaRegistries.createWorldLookup();
+        dataVersion = SharedConstants.getCurrentVersion().dataVersion().version();
     }
 
     @Test
@@ -32,7 +32,7 @@ class WorldgenFingerprintServiceTest {
         Holder<NoiseGeneratorSettings> overworld = noiseSettings(NoiseGeneratorSettings.OVERWORLD);
 
         WorldgenFingerprint first = WorldgenFingerprintService.create(
-                Level.OVERWORLD.location(),
+                Level.OVERWORLD.identifier(),
                 0x5EED_1234_ABCDL,
                 "minecraft:noise|test",
                 registries,
@@ -40,7 +40,7 @@ class WorldgenFingerprintServiceTest {
                 dataVersion,
                 WorldgenFingerprintService.CURRENT_SCHEMA_VERSION);
         WorldgenFingerprint second = WorldgenFingerprintService.create(
-                Level.OVERWORLD.location(),
+                Level.OVERWORLD.identifier(),
                 0x5EED_1234_ABCDL,
                 "minecraft:noise|test",
                 registries,
@@ -57,7 +57,7 @@ class WorldgenFingerprintServiceTest {
         Holder<NoiseGeneratorSettings> nether = noiseSettings(NoiseGeneratorSettings.NETHER);
 
         WorldgenFingerprint baseline = WorldgenFingerprintService.create(
-                Level.OVERWORLD.location(),
+                Level.OVERWORLD.identifier(),
                 12345L,
                 "minecraft:noise|test",
                 registries,
@@ -65,7 +65,7 @@ class WorldgenFingerprintServiceTest {
                 dataVersion,
                 WorldgenFingerprintService.CURRENT_SCHEMA_VERSION);
         WorldgenFingerprint differentSeed = WorldgenFingerprintService.create(
-                Level.OVERWORLD.location(),
+                Level.OVERWORLD.identifier(),
                 12346L,
                 "minecraft:noise|test",
                 registries,
@@ -73,7 +73,7 @@ class WorldgenFingerprintServiceTest {
                 dataVersion,
                 WorldgenFingerprintService.CURRENT_SCHEMA_VERSION);
         WorldgenFingerprint differentSettings = WorldgenFingerprintService.create(
-                Level.NETHER.location(),
+                Level.NETHER.identifier(),
                 12345L,
                 "minecraft:noise|test",
                 registries,

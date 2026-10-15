@@ -7,14 +7,10 @@
   "mixins": [
     "fabric.MinecraftServerMixin",
     "fabric.TreeFeatureMixin",
-    "fabric.HugeMushroomFeatureMixin",
     "fabric.HugeFungusFeatureMixin",
     "fabric.BambooFeatureMixin",
     "fabric.GenericVegetationFeatureMixin",
     "fabric.ServerLevelStructureMixin",
-    "fabric.tyg.TreeFromStructureNBTFeatureMixin",
-    "fabric.rtf.RTFTemplateFeatureMixin",
-    "fabric.rtf.RTFBushFeatureMixin",
     "fabric.BeardifierMixin",
     "fabric.StructureManagerAccessor"
   ],

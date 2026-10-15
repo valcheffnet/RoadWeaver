@@ -1,39 +1,46 @@
 package net.shiroha233.roadweaver.pathfinding.cache;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.levelgen.DensityFunction;
-import net.minecraft.world.level.levelgen.NoiseRouter;
-import net.minecraft.world.level.levelgen.NoiseSettings;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 快速高度采样器
+ * Upstream scanned initialDensityWithoutJaggedness top-down for density > 0.390625. In 26.x the noise router
+ * exposes that estimate directly as chunkSurfaceLevel (vanilla preliminary_surface_level), so it is sampled once
+ * per 4x4 column. Non-noise generators fall back to ChunkGenerator.getBaseHeight.
  */
 public final class FastHeightSampler {
 
-    private static final double DENSITY_THRESHOLD = 0.390625D;
-
-    private final DensityFunction initialDensity;
+    private final ServerLevel level;
+    private final RandomState randomState;
+    private final DensityFunction surfaceLevel;
     private final int minY;
     private final int maxY;
-    private final int cellHeight;
     private ConcurrentHashMap<Long, Integer> heightCache = new ConcurrentHashMap<>();
 
-    private FastHeightSampler(DensityFunction initialDensity, NoiseSettings settings) {
-        this.initialDensity = initialDensity;
-        this.minY = settings.minY();
-        this.maxY = minY + settings.height();
-        this.cellHeight = settings.getCellHeight();
+    private FastHeightSampler(ServerLevel level, RandomState randomState, DensityFunction surfaceLevel) {
+        this.level = level;
+        this.randomState = randomState;
+        this.surfaceLevel = surfaceLevel;
+        this.minY = level.getMinY();
+        this.maxY = level.getMaxY();
     }
 
     public static FastHeightSampler create(ServerLevel level) {
         var chunkSource = level.getChunkSource();
         RandomState randomState = chunkSource.getGeneratorState().randomState();
-        NoiseRouter router = randomState.router();
-        NoiseSettings settings = getNoiseSettings(level);
-        return new FastHeightSampler(router.initialDensityWithoutJaggedness(), settings);
+        DensityFunction surfaceLevel = null;
+        if (chunkSource.getGenerator() instanceof NoiseBasedChunkGenerator noiseGen) {
+            surfaceLevel = noiseGen.generatorSettings().value().noiseRouter().chunkSurfaceLevel();
+        }
+        return new FastHeightSampler(level, randomState, surfaceLevel);
     }
 
     public int sampleHeight(int x, int z) {
@@ -57,24 +64,16 @@ public final class FastHeightSampler {
     }
 
     private int computeHeight(int x, int z) {
-        for (int y = maxY; y >= minY; y -= cellHeight) {
-            double density = initialDensity.compute(
-                    new DensityFunction.SinglePointContext(x, y, z));
-            if (density > DENSITY_THRESHOLD) return y;
+        if (surfaceLevel != null) {
+            float y = randomState.sampleBlockValueUncached(surfaceLevel, x, 0, z);
+            return Mth.clamp(Mth.floor(y), minY, maxY);
         }
-        return minY;
+        ChunkGenerator generator = level.getChunkSource().getGenerator();
+        return generator.getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, level, randomState);
     }
 
     private static long packXZ(int x, int z) {
         return ((long) x << 32) | (z & 0xFFFFFFFFL);
-    }
-
-    private static NoiseSettings getNoiseSettings(ServerLevel level) {
-        var generator = level.getChunkSource().getGenerator();
-        if (generator instanceof net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator noiseGen) {
-            return noiseGen.generatorSettings().value().noiseSettings();
-        }
-        return NoiseSettings.create(-64, 384, 1, 2);
     }
 
     /**
