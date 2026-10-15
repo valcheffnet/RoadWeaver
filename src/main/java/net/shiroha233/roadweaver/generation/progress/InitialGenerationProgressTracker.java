@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -23,6 +24,8 @@ public final class InitialGenerationProgressTracker {
     private static final Logger LOGGER = LoggerFactory.getLogger("RoadWeaver/InitialGen");
     private static final long LOG_INTERVAL_MS = 10_000L;
     private static final AtomicLong LAST_LOG_AT = new AtomicLong();
+    /** True between reset() and finish(): only the initial run logs to the console. */
+    private static final AtomicBoolean INITIAL_RUN = new AtomicBoolean();
 
     private static final AtomicReference<InitialGenerationStage> STAGE = new AtomicReference<>(InitialGenerationStage.FINISHED);
     private static final AtomicLong STARTED_AT = new AtomicLong(0L);
@@ -64,6 +67,7 @@ public final class InitialGenerationProgressTracker {
 
     public static void reset() {
         STARTED_AT.set(System.currentTimeMillis());
+        INITIAL_RUN.set(true);
         STAGE.set(InitialGenerationStage.PLANNING);
         OVERALL_PERCENT_FLOOR.set(0);
         CONNECTIONS_TOTAL.set(0);
@@ -100,15 +104,17 @@ public final class InitialGenerationProgressTracker {
     public static void finish() {
         STAGE.set(InitialGenerationStage.FINISHED);
         OVERALL_PERCENT_FLOOR.set(100);
-        LOGGER.info("Initial road generation finished in {} s: {} roads done, {} failed",
-                (System.currentTimeMillis() - STARTED_AT.get()) / 1000L, CONNECTIONS_DONE.get(), CONNECTIONS_FAILED.get());
+        if (INITIAL_RUN.getAndSet(false)) {
+            LOGGER.info("Initial road generation finished in {} s: {} roads done, {} failed",
+                    (System.currentTimeMillis() - STARTED_AT.get()) / 1000L, CONNECTIONS_DONE.get(), CONNECTIONS_FAILED.get());
+        }
         CURRENT_OPERATION.set("finished");
         ACTIVE_WORKERS.set(0);
     }
 
     public static void enterStage(InitialGenerationStage stage, String operation) {
         if (stage == null) return;
-        if (STAGE.getAndSet(stage) != stage) {
+        if (STAGE.getAndSet(stage) != stage && INITIAL_RUN.get()) {
             LOGGER.info("Initial road generation: {}{}", stage, operation == null || operation.isBlank() ? "" : " (" + operation + ")");
         }
         if (operation != null && !operation.isBlank()) {
@@ -124,7 +130,7 @@ public final class InitialGenerationProgressTracker {
         ACTIVE_WORKERS.set(Math.max(0, generating));
         long now = System.currentTimeMillis();
         long last = LAST_LOG_AT.get();
-        if (total > 0 && now - last >= LOG_INTERVAL_MS && LAST_LOG_AT.compareAndSet(last, now)) {
+        if (INITIAL_RUN.get() && total > 0 && now - last >= LOG_INTERVAL_MS && LAST_LOG_AT.compareAndSet(last, now)) {
             LOGGER.info("Initial road generation: {}/{} roads done, {} generating, {} failed", done, total, generating, failed);
         }
     }

@@ -110,7 +110,7 @@ public final class SignTextService {
         if (!(be instanceof HangingSignBlockEntity sign)) return false;
 
         SignText front = sign.getText(SignTextSlot.FRONT);
-        front = front.asMutable().setLine(0, Component.translatable("gui.roadweaver.sign.next_location")).asImmutable();
+        front = front.asMutable().setLine(0, Component.translatableWithFallback("gui.roadweaver.sign.next_location", "Next Location")).asImmutable();
         front = front.asMutable().setLine(1, Component.literal(text + " m")).asImmutable();
         front = front.asMutable().setLine(2, Component.literal("")).asImmutable();
         front = front.asMutable().setLine(3, Component.literal("")).asImmutable();
@@ -118,8 +118,8 @@ public final class SignTextService {
 
         SignText back = sign.getText(SignTextSlot.BACK);
         back = back.asMutable().setLine(0, Component.literal("----------")).asImmutable();
-        back = back.asMutable().setLine(1, Component.translatable("gui.roadweaver.sign.welcome")).asImmutable();
-        back = back.asMutable().setLine(2, Component.translatable("gui.roadweaver.sign.traveller")).asImmutable();
+        back = back.asMutable().setLine(1, Component.translatableWithFallback("gui.roadweaver.sign.welcome", "Welcome")).asImmutable();
+        back = back.asMutable().setLine(2, Component.translatableWithFallback("gui.roadweaver.sign.traveller", "Traveler")).asImmutable();
         back = back.asMutable().setLine(3, Component.literal("----------")).asImmutable();
         sign.setText(back, SignTextSlot.BACK);
 
@@ -146,8 +146,8 @@ public final class SignTextService {
         if (!(be instanceof HangingSignBlockEntity sign)) return false;
 
         SignText front = sign.getText(SignTextSlot.FRONT);
-        front = front.asMutable().setLine(0, Component.translatable("gui.roadweaver.sign.sea_question.line1")).asImmutable();
-        front = front.asMutable().setLine(1, Component.translatable("gui.roadweaver.sign.sea_question.line2")).asImmutable();
+        front = front.asMutable().setLine(0, Component.translatableWithFallback("gui.roadweaver.sign.sea_question.line1", "What's beyond")).asImmutable();
+        front = front.asMutable().setLine(1, Component.translatableWithFallback("gui.roadweaver.sign.sea_question.line2", "the sea?")).asImmutable();
         front = front.asMutable().setLine(2, Component.literal("")).asImmutable();
         front = front.asMutable().setLine(3, Component.literal("")).asImmutable();
         sign.setText(front, SignTextSlot.FRONT);
