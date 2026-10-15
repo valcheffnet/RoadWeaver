@@ -93,7 +93,7 @@ public final class MapTerrainSamplingService {
         } catch (RuntimeException submissionFailure) {
             publish(MapSamplingSnapshot.Stage.FAILED, visibleBounds, 0);
             LOGGER.warn("提交主动地图采样任务失败 dimension={} mode={}",
-                    level.dimension().location(), mode, submissionFailure);
+                    level.dimension().identifier(), mode, submissionFailure);
             return StartResult.SUBMISSION_FAILED;
         }
         return StartResult.STARTED;
@@ -117,7 +117,7 @@ public final class MapTerrainSamplingService {
                                                         int step,
                                                         TerrainSamplingMode mode) {
         CoarseRegionBounds bounds = CoarseRegionBounds.aligned(
-                level.dimension().location(),
+                level.dimension().identifier(),
                 requestedBounds.minX(), requestedBounds.minZ(),
                 requestedBounds.maxX(), requestedBounds.maxZ(),
                 step);
@@ -160,7 +160,7 @@ public final class MapTerrainSamplingService {
         } catch (RuntimeException failure) {
             publish(MapSamplingSnapshot.Stage.FAILED, visibleBounds, snapshot.get().percent());
             LOGGER.warn("主动地图采样失败 dimension={} mode={} bounds=[{},{} -> {},{}]",
-                    level.dimension().location(),
+                    level.dimension().identifier(),
                     plan.mode(),
                     visibleBounds.minX(), visibleBounds.minZ(),
                     visibleBounds.maxX(), visibleBounds.maxZ(),

@@ -5,8 +5,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -32,20 +33,20 @@ public final class BridgeTemplateStructureRegistry {
     private static volatile List<BridgeTemplate> cache;
 
     public static class BridgeTemplate {
-        private final ResourceLocation id;
+        private final Identifier id;
         private final Holder<Structure> holder;
         private final BridgeTemplateStructure structure;
         private BlockState[][][] voxelGrid = new BlockState[0][0][0];
         private Vec3i size = new Vec3i(0, 0, 0);
 
-        public BridgeTemplate(ResourceLocation id, Holder<Structure> holder, BridgeTemplateStructure structure,
+        public BridgeTemplate(Identifier id, Holder<Structure> holder, BridgeTemplateStructure structure,
                 ServerLevel level) {
             this.id = id;
             this.holder = holder;
             this.structure = structure;
 
             if (level != null) {
-                StructureTemplate template = level.getStructureManager().get(structure.templateId).orElse(null);
+                StructureTemplate template = level.getStructureTemplateManager().get(structure.templateId).orElse(null);
                 if (template == null) {
                     return;
                 }
@@ -53,8 +54,8 @@ public final class BridgeTemplateStructureRegistry {
                 voxelGrid = new BlockState[size.getX()][size.getY()][size.getZ()];
 
                 CompoundTag tag = template.save(new CompoundTag());
-                ListTag palette = tag.getList("palette", 10);
-                ListTag blocks = tag.getList("blocks", 10);
+                ListTag palette = tag.getListOrEmpty("palette");
+                ListTag blocks = tag.getListOrEmpty("blocks");
 
                 parseVoxel(palette, blocks);
             }
@@ -102,7 +103,7 @@ public final class BridgeTemplateStructureRegistry {
             return size.getX();
         }
 
-        public ResourceLocation getId() {
+        public Identifier getId() {
             return id;
         }
 
@@ -118,20 +119,20 @@ public final class BridgeTemplateStructureRegistry {
             List<BlockState> palette = new ArrayList<>();
 
             for (int i = 0; i < paletteTag.size(); i++) {
-                CompoundTag blockTag = paletteTag.getCompound(i);
+                CompoundTag blockTag = paletteTag.getCompoundOrEmpty(i);
                 BlockState blockState = readBlockState(blockTag);
                 palette.add(blockState);
             }
 
             for (int i = 0; i < blocksTag.size(); i++) {
-                CompoundTag blockTag = blocksTag.getCompound(i);
+                CompoundTag blockTag = blocksTag.getCompoundOrEmpty(i);
 
-                ListTag pos = blockTag.getList("pos", 3);
-                int x = pos.getInt(0);
-                int y = pos.getInt(1);
-                int z = pos.getInt(2);
+                ListTag pos = blockTag.getListOrEmpty("pos");
+                int x = pos.getIntOr(0, -1);
+                int y = pos.getIntOr(1, -1);
+                int z = pos.getIntOr(2, -1);
 
-                int state = blockTag.getInt("state");
+                int state = blockTag.getIntOr("state", 0);
 
                 if (x >= 0 && x < size.getX() && y >= 0 && y < size.getY() && z >= 0 && z < size.getZ()) {
                     voxelGrid[x][y][z] = palette.get(state);
@@ -140,36 +141,7 @@ public final class BridgeTemplateStructureRegistry {
         }
 
         public static BlockState readBlockState(CompoundTag pTag) {
-            if (!pTag.contains("Name", 8)) {
-                return Blocks.AIR.defaultBlockState();
-            } else {
-                ResourceLocation resourcelocation = ResourceLocation.parse(pTag.getString("Name"));
-                Optional<? extends Holder<Block>> optional = BuiltInRegistries.BLOCK.asLookup().get(ResourceKey.create(Registries.BLOCK, resourcelocation));
-                if (optional.isEmpty()) {
-                    return Blocks.AIR.defaultBlockState();
-                } else {
-                    Block block = optional.get().value();
-                    BlockState blockstate = block.defaultBlockState();
-                    if (pTag.contains("Properties", 10)) {
-                        CompoundTag compoundtag = pTag.getCompound("Properties");
-                        StateDefinition<Block, BlockState> statedefinition = block.getStateDefinition();
-
-                        for(String s : compoundtag.getAllKeys()) {
-                            Property<?> property = statedefinition.getProperty(s);
-                            if (property != null) {
-                                blockstate = setValueHelper(blockstate, property, s, compoundtag, pTag);
-                            }
-                        }
-                    }
-
-                    return blockstate;
-                }
-            }
-        }
-
-        private static <S extends StateHolder<?, S>, T extends Comparable<T>> S setValueHelper(S pStateHolder, Property<T> pProperty, String pPropertyName, CompoundTag pPropertiesTag, CompoundTag pBlockStateTag) {
-            Optional<T> optional = pProperty.getValue(pPropertiesTag.getString(pPropertyName));
-            return optional.map(t -> pStateHolder.setValue(pProperty, t)).orElse(pStateHolder);
+            return NbtUtils.readBlockState(BuiltInRegistries.BLOCK, pTag);
         }
     }
 
@@ -227,14 +199,14 @@ public final class BridgeTemplateStructureRegistry {
         List<BridgeTemplate> result = new ArrayList<>();
         RegistryAccess registryAccess = level.registryAccess();
 
-        Registry<Structure> structureRegistry = registryAccess.registryOrThrow(Registries.STRUCTURE);
+        Registry<Structure> structureRegistry = registryAccess.lookupOrThrow(Registries.STRUCTURE);
 
         for (var entry : structureRegistry.entrySet()) {
-            ResourceLocation id = entry.getKey().location();
+            Identifier id = entry.getKey().identifier();
             Structure structure = entry.getValue();
 
             if (structure instanceof BridgeTemplateStructure roadsideStructure) {
-                Holder<Structure> holder = structureRegistry.getHolderOrThrow(entry.getKey());
+                Holder<Structure> holder = structureRegistry.getOrThrow(entry.getKey());
                 result.add(new BridgeTemplate(id, holder, roadsideStructure, level));
             }
         }

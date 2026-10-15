@@ -64,7 +64,7 @@ public final class PlannedPathCache {
                 try {
                     store.save(key, fingerprint, immutablePath);
                 } catch (IOException failure) {
-                    LOGGER.warn("持久化待生成路径失败 dimension={} key={}", level.dimension().location(), key, failure);
+                    LOGGER.warn("持久化待生成路径失败 dimension={} key={}", level.dimension().identifier(), key, failure);
                 }
             }
         }
@@ -90,7 +90,7 @@ public final class PlannedPathCache {
             loaded.ifPresent(path -> memoryPut(level, key, new Entry(fingerprint, path)));
             return loaded;
         } catch (IOException failure) {
-            LOGGER.warn("读取待生成路径失败 dimension={} key={}", level.dimension().location(), key, failure);
+            LOGGER.warn("读取待生成路径失败 dimension={} key={}", level.dimension().identifier(), key, failure);
             return Optional.empty();
         }
     }
@@ -102,7 +102,7 @@ public final class PlannedPathCache {
         try {
             store(level).delete(key);
         } catch (IOException failure) {
-            LOGGER.warn("删除已生成路径失败 dimension={} key={}", level.dimension().location(), key, failure);
+            LOGGER.warn("删除已生成路径失败 dimension={} key={}", level.dimension().identifier(), key, failure);
         }
     }
 
@@ -170,7 +170,7 @@ public final class PlannedPathCache {
                     config);
         } catch (RuntimeException failure) {
             LOGGER.warn("计算待生成路径指纹失败 dimension={}，仅使用内存路径",
-                    level.dimension().location(), failure);
+                    level.dimension().identifier(), failure);
             return null;
         }
     }
@@ -181,7 +181,7 @@ public final class PlannedPathCache {
      * 以路径点总数为预算的 LRU，让内存占用与实际数据量成正比，
      * 而非随条目数与单条长度相乘。
      */
-    private static final class PointBudgetLru extends LinkedHashMap<PlannedPathKey, Entry> {
+    private static final class PointBudgetLru extends LinkedHashMap<PlannedPathKey, PlannedPathCache.Entry> {
         private long points;
 
         PointBudgetLru() {
@@ -189,12 +189,12 @@ public final class PlannedPathCache {
         }
 
         @Override
-        protected boolean removeEldestEntry(Map.Entry<PlannedPathKey, Entry> eldest) {
+        protected boolean removeEldestEntry(Map.Entry<PlannedPathKey, PlannedPathCache.Entry> eldest) {
             if (points <= MAX_PATH_POINTS_PER_LEVEL) return false;
             // 逐出最旧条目直到回到预算内
-            Iterator<Map.Entry<PlannedPathKey, Entry>> it = entrySet().iterator();
+            Iterator<Map.Entry<PlannedPathKey, PlannedPathCache.Entry>> it = entrySet().iterator();
             while (points > MAX_PATH_POINTS_PER_LEVEL && it.hasNext()) {
-                Map.Entry<PlannedPathKey, Entry> oldest = it.next();
+                Map.Entry<PlannedPathKey, PlannedPathCache.Entry> oldest = it.next();
                 points -= cost(oldest.getValue());
                 it.remove();
             }
@@ -202,12 +202,12 @@ public final class PlannedPathCache {
         }
 
         @Override
-        public Entry put(PlannedPathKey key, Entry value) {
+        public PlannedPathCache.Entry put(PlannedPathKey key, PlannedPathCache.Entry value) {
             // 必须先更新 points 再交给 super.put：后者插入完成后会同步调用
             // removeEldestEntry，那一刻需要看到已包含本次新增的预算。
             // 注意 super.get 会触发 access-order 的链表重排；此处无害——
             // 该条目紧接着就要被覆写并移到队尾，与我们想要的结果一致。
-            Entry previous = super.get(key);
+            PlannedPathCache.Entry previous = super.get(key);
             if (previous != null) {
                 points -= cost(previous);
             }
@@ -216,8 +216,8 @@ public final class PlannedPathCache {
         }
 
         @Override
-        public Entry remove(Object key) {
-            Entry removed = super.remove(key);
+        public PlannedPathCache.Entry remove(Object key) {
+            PlannedPathCache.Entry removed = super.remove(key);
             if (removed != null) {
                 points -= cost(removed);
             }
@@ -230,7 +230,7 @@ public final class PlannedPathCache {
             points = 0L;
         }
 
-        private static long cost(Entry entry) {
+        private static long cost(PlannedPathCache.Entry entry) {
             if (entry == null || entry.path() == null) return 0L;
             return entry.path().size();
         }

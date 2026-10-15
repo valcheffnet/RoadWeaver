@@ -10,6 +10,7 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.shiroha233.roadweaver.persistence.files.SignTextFileStorage;
 import net.shiroha233.roadweaver.persistence.sharded.SignTextShardStorage;
@@ -76,7 +77,7 @@ public final class SignTextService {
 
     public static void onChunkReady(ServerLevel level, ChunkPos chunkPos) {
         if (level == null || chunkPos == null || !Level.OVERWORLD.equals(level.dimension())) return;
-        markChunkDirty(level, chunkPos.x, chunkPos.z);
+        markChunkDirty(level, chunkPos.x(), chunkPos.z());
     }
 
     public static void onDimensionUnload(ServerLevel level) {
@@ -108,19 +109,19 @@ public final class SignTextService {
         BlockEntity be = chunk.getBlockEntity(pos);
         if (!(be instanceof HangingSignBlockEntity sign)) return false;
 
-        SignText front = sign.getText(true);
-        front = front.setMessage(0, Component.translatable("gui.roadweaver.sign.next_location"));
-        front = front.setMessage(1, Component.literal(text + " m"));
-        front = front.setMessage(2, Component.literal(""));
-        front = front.setMessage(3, Component.literal(""));
-        sign.setText(front, true);
+        SignText front = sign.getText(SignTextSlot.FRONT);
+        front = front.asMutable().setLine(0, Component.translatable("gui.roadweaver.sign.next_location")).asImmutable();
+        front = front.asMutable().setLine(1, Component.literal(text + " m")).asImmutable();
+        front = front.asMutable().setLine(2, Component.literal("")).asImmutable();
+        front = front.asMutable().setLine(3, Component.literal("")).asImmutable();
+        sign.setText(front, SignTextSlot.FRONT);
 
-        SignText back = sign.getText(false);
-        back = back.setMessage(0, Component.literal("----------"));
-        back = back.setMessage(1, Component.translatable("gui.roadweaver.sign.welcome"));
-        back = back.setMessage(2, Component.translatable("gui.roadweaver.sign.traveller"));
-        back = back.setMessage(3, Component.literal("----------"));
-        sign.setText(back, false);
+        SignText back = sign.getText(SignTextSlot.BACK);
+        back = back.asMutable().setLine(0, Component.literal("----------")).asImmutable();
+        back = back.asMutable().setLine(1, Component.translatable("gui.roadweaver.sign.welcome")).asImmutable();
+        back = back.asMutable().setLine(2, Component.translatable("gui.roadweaver.sign.traveller")).asImmutable();
+        back = back.asMutable().setLine(3, Component.literal("----------")).asImmutable();
+        sign.setText(back, SignTextSlot.BACK);
 
         sign.setChanged();
         return true;
@@ -144,19 +145,19 @@ public final class SignTextService {
         BlockEntity be = chunk.getBlockEntity(pos);
         if (!(be instanceof HangingSignBlockEntity sign)) return false;
 
-        SignText front = sign.getText(true);
-        front = front.setMessage(0, Component.translatable("gui.roadweaver.sign.sea_question.line1"));
-        front = front.setMessage(1, Component.translatable("gui.roadweaver.sign.sea_question.line2"));
-        front = front.setMessage(2, Component.literal(""));
-        front = front.setMessage(3, Component.literal(""));
-        sign.setText(front, true);
+        SignText front = sign.getText(SignTextSlot.FRONT);
+        front = front.asMutable().setLine(0, Component.translatable("gui.roadweaver.sign.sea_question.line1")).asImmutable();
+        front = front.asMutable().setLine(1, Component.translatable("gui.roadweaver.sign.sea_question.line2")).asImmutable();
+        front = front.asMutable().setLine(2, Component.literal("")).asImmutable();
+        front = front.asMutable().setLine(3, Component.literal("")).asImmutable();
+        sign.setText(front, SignTextSlot.FRONT);
 
-        SignText back = sign.getText(false);
-        back = back.setMessage(0, Component.literal(""));
-        back = back.setMessage(1, Component.literal(""));
-        back = back.setMessage(2, Component.literal(""));
-        back = back.setMessage(3, Component.literal(""));
-        sign.setText(back, false);
+        SignText back = sign.getText(SignTextSlot.BACK);
+        back = back.asMutable().setLine(0, Component.literal("")).asImmutable();
+        back = back.asMutable().setLine(1, Component.literal("")).asImmutable();
+        back = back.asMutable().setLine(2, Component.literal("")).asImmutable();
+        back = back.asMutable().setLine(3, Component.literal("")).asImmutable();
+        sign.setText(back, SignTextSlot.BACK);
 
         sign.setChanged();
         return true;
@@ -226,7 +227,7 @@ public final class SignTextService {
 
     private static void markChunkDirty(ServerLevel level, int chunkX, int chunkZ) {
         if (level == null || !Level.OVERWORLD.equals(level.dimension())) return;
-        long key = ChunkPos.asLong(chunkX, chunkZ);
+        long key = ChunkPos.pack(chunkX, chunkZ);
         synchronized (DIRTY_LOCK) {
             if (DIRTY_MARKS.putIfAbsent(key, Boolean.TRUE) != null) return;
             DIRTY_CHUNKS.add(key);

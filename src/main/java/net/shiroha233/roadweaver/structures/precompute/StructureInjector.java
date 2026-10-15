@@ -45,15 +45,15 @@ public final class StructureInjector {
             return;
         }
         
-        Registry<Structure> structureRegistry = level.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        Registry<Structure> structureRegistry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
         StructureManager structureManager = level.structureManager();
-        StructureTemplateManager templateManager = level.getStructureManager();
+        StructureTemplateManager templateManager = level.getStructureTemplateManager();
         
         int injectedCount = 0;
         
         for (PendingRoadsideStructure pendingStructure : pending) {
             try {
-                Structure structure = structureRegistry.get(pendingStructure.structureId());
+                Structure structure = structureRegistry.getValue(pendingStructure.structureId());
                 if (structure == null) {
                     LOGGER.warn("Structure {} not found in registry, skipping", pendingStructure.structureId());
                     continue;
@@ -90,8 +90,7 @@ public final class StructureInjector {
                     new PiecesContainer(List.of(piece))
                 );
                 
-                SectionPos sectionPos = SectionPos.of(chunkPos, 0);
-                structureManager.setStartForStructure(sectionPos, structure, start, chunk);
+                structureManager.setStartForStructure(structure, start, chunk);
                 injectedCount++;
                 
             } catch (Exception e) {
@@ -102,7 +101,7 @@ public final class StructureInjector {
         
         if (injectedCount > 0) {
             LOGGER.debug("Injected {} roadside structures into chunk [{}, {}]", 
-                injectedCount, chunkPos.x, chunkPos.z);
+                injectedCount, chunkPos.x(), chunkPos.z());
         }
         
         PendingStructureStorage.markAsInjected(level, chunkPos);
@@ -115,15 +114,14 @@ public final class StructureInjector {
             return;
         }
 
-        Registry<Structure> structureRegistry = level.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        Registry<Structure> structureRegistry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
         StructureManager structureManager = level.structureManager();
-        StructureTemplateManager templateManager = level.getStructureManager();
-        SectionPos sectionPos = SectionPos.of(chunkPos, 0);
+        StructureTemplateManager templateManager = level.getStructureTemplateManager();
         int injectedCount = 0;
 
         for (PendingRoadsideVillage village : villages) {
             try {
-                Structure structure = structureRegistry.get(village.structureId());
+                Structure structure = structureRegistry.getValue(village.structureId());
                 if (!(structure instanceof RoadsideVillageStructure)) {
                     LOGGER.warn("Roadside village structure {} is not available", village.structureId());
                     continue;
@@ -141,7 +139,7 @@ public final class StructureInjector {
                     0,
                     new PiecesContainer(new ArrayList<>(pieces))
                 );
-                structureManager.setStartForStructure(sectionPos, structure, start, chunk);
+                structureManager.setStartForStructure(structure, start, chunk);
                 injectedCount++;
             } catch (Exception e) {
                 LOGGER.error("Failed to inject roadside village {}", village.placementId(), e);
@@ -149,7 +147,7 @@ public final class StructureInjector {
         }
 
         if (injectedCount > 0) {
-            LOGGER.debug("Injected {} roadside villages into chunk [{}, {}]", injectedCount, chunkPos.x, chunkPos.z);
+            LOGGER.debug("Injected {} roadside villages into chunk [{}, {}]", injectedCount, chunkPos.x(), chunkPos.z());
         }
 
         PendingRoadsideVillageStorage.markAsInjected(level, chunkPos);

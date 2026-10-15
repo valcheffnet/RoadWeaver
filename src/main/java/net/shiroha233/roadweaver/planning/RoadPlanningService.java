@@ -75,7 +75,7 @@ public final class RoadPlanningService {
         InitialGenerationProgressTracker.enterStage(InitialGenerationStage.PLANNING, "discovering_structures");
         ModConfig cfg = ConfigService.get();
         int radiusChunks = Math.max(1, cfg.planning().initialPlanRadiusChunks());
-        BlockPos spawn = level.getSharedSpawnPos();
+        BlockPos spawn = level.getRespawnData().pos();
         int cx = spawn.getX() >> 4;
         int cz = spawn.getZ() >> 4;
         int minX = (cx - radiusChunks) * 16;
@@ -90,7 +90,7 @@ public final class RoadPlanningService {
 
     public static void planAroundPlayer(ServerPlayer player) {
         if (player == null) return;
-        ServerLevel level = player.serverLevel();
+        ServerLevel level = player.level();
         if (!Level.OVERWORLD.equals(level.dimension())) return;
         ModConfig cfg = ConfigService.get();
         if (!cfg.planning().dynamicPlanEnabled()) return;
@@ -98,8 +98,8 @@ public final class RoadPlanningService {
         int radiusChunks = Math.max(1, cfg.planning().dynamicPlanRadiusChunks());
         int stride = Math.max(1, cfg.planning().dynamicPlanStrideChunks());
         int tile = Math.max(RoadConstants.PLAN_TILE_MIN, Math.min(RoadConstants.PLAN_TILE_MAX, stride));
-        int pcx = player.chunkPosition().x;
-        int pcz = player.chunkPosition().z;
+        int pcx = player.chunkPosition().x();
+        int pcz = player.chunkPosition().z();
         int kx = floorDiv(pcx, tile);
         int kz = floorDiv(pcz, tile);
         long key = (((long) kx) << 32) ^ (kz & 0xffffffffL);
@@ -132,7 +132,7 @@ public final class RoadPlanningService {
                         if (backfillPlan) unmarkRoadBackfillPlanTile(level, key);
                         if (error != null && !(error instanceof CancellationException)
                                 && !(error.getCause() instanceof CancellationException)) {
-                            LOGGER.warn("动态规划 tile 失败，保留重试机会 dimension={} tile=[{},{}]", level.dimension().location(), kx, kz, error);
+                            LOGGER.warn("动态规划 tile 失败，保留重试机会 dimension={} tile=[{},{}]", level.dimension().identifier(), kx, kz, error);
                         }
                         return;
                     }
@@ -205,7 +205,7 @@ public final class RoadPlanningService {
         try {
             ServerMapPlanningActivityBridge.broadcast(level);
         } catch (RuntimeException failure) {
-            LOGGER.debug("自动规划采样范围同步失败 dimension={}", level.dimension().location(), failure);
+            LOGGER.debug("自动规划采样范围同步失败 dimension={}", level.dimension().identifier(), failure);
         }
     }
 
@@ -250,11 +250,11 @@ public final class RoadPlanningService {
                 }
                 if (completed) {
                     LOGGER.info("已补全规划区域地图瓦片 dimension={} layer={} min=({}, {}) max=({}, {})",
-                            level.dimension().location(), layer, minBlockX, minBlockZ, maxBlockX, maxBlockZ);
+                            level.dimension().identifier(), layer, minBlockX, minBlockZ, maxBlockX, maxBlockZ);
                 }
             } catch (RuntimeException e) {
                 LOGGER.warn("补全规划区域地图瓦片失败 dimension={} layer={}",
-                        level.dimension().location(), layer, e);
+                        level.dimension().identifier(), layer, e);
             } finally {
                 if (region != null) region.dispose();
                 if (!completed) {
@@ -361,7 +361,7 @@ public final class RoadPlanningService {
         if (level == null || !Level.OVERWORLD.equals(level.dimension())) return CompletableFuture.completedFuture(null);
         ModConfig cfg = ConfigService.get();
         int radiusChunks = Math.max(1, cfg.planning().initialPlanRadiusChunks());
-        BlockPos spawn = level.getSharedSpawnPos();
+        BlockPos spawn = level.getRespawnData().pos();
         int cx = spawn.getX() >> 4;
         int cz = spawn.getZ() >> 4;
         int minX = (cx - radiusChunks) * 16;

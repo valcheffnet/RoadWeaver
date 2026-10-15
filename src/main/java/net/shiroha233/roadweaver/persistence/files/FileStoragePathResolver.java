@@ -1,6 +1,6 @@
 package net.shiroha233.roadweaver.persistence.files;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.LevelResource;
 
@@ -19,10 +19,10 @@ public final class FileStoragePathResolver {
     }
 
     public static Path categoryRoot(ServerLevel level, String category) {
-        return root(level).resolve(category).resolve(dimensionKey(level.dimension().location()));
+        return root(level).resolve(category).resolve(dimensionKey(level.dimension().identifier()));
     }
 
-    public static String dimensionKey(ResourceLocation location) {
+    public static String dimensionKey(Identifier location) {
         if (location == null) return "unknown";
         return location.getNamespace() + "_" + location.getPath().replace('/', '_');
     }

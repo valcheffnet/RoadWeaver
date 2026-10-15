@@ -1,6 +1,6 @@
 package net.shiroha233.roadweaver.pathfinding.terrain.region;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.shiroha233.roadweaver.core.constants.RoadConstants;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CoarseTerrainRegionPathfindingTest {
-    private static final ResourceLocation DIMENSION = ResourceLocation.parse("minecraft:overworld");
+    private static final Identifier DIMENSION = Identifier.parse("minecraft:overworld");
 
     @Test
     void preparedGridUsesExistingTilesAcrossNegativeAndPositiveBoundaries() {

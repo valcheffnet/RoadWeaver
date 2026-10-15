@@ -1,7 +1,7 @@
 /* 文件职责：统一解析服务端地图瓦片目录、图层目录与旧版 terrain 迁移路径。 */
 package net.shiroha233.roadweaver.map.tile.storage;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.LevelResource;
 import net.shiroha233.roadweaver.map.tile.core.MapTileCoord;
@@ -26,7 +26,7 @@ public final class ServerMapTilePathResolver {
     }
 
     public static Path dimensionRoot(ServerLevel level) {
-        return mapRoot(level).resolve(dimensionKey(level.dimension().location()));
+        return mapRoot(level).resolve(dimensionKey(level.dimension().identifier()));
     }
 
     public static Path layerRoot(ServerLevel level, MapTileLayer layer) {
@@ -71,7 +71,7 @@ public final class ServerMapTilePathResolver {
                 .resolve(TERRAIN_LAYER_MIGRATION_MARKER);
     }
 
-    public static String dimensionKey(ResourceLocation location) {
+    public static String dimensionKey(Identifier location) {
         if (location == null) {
             return "unknown";
         }

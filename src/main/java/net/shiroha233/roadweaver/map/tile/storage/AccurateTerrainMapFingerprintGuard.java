@@ -29,7 +29,7 @@ public final class AccurateTerrainMapFingerprintGuard {
         try {
             ensure(level, WorldgenFingerprintService.forLevel(level).namespace());
         } catch (RuntimeException failure) {
-            LOGGER.warn("计算精确地形地图指纹失败 dimension={}", level.dimension().location(), failure);
+            LOGGER.warn("计算精确地形地图指纹失败 dimension={}", level.dimension().identifier(), failure);
         }
     }
 
@@ -50,7 +50,7 @@ public final class AccurateTerrainMapFingerprintGuard {
                         "清理过期精确地形地图失败");
                 FileStorageIO.writeStringAtomic(marker, expected);
             } catch (IOException failure) {
-                LOGGER.warn("校验精确地形地图指纹失败 dimension={}", level.dimension().location(), failure);
+                LOGGER.warn("校验精确地形地图指纹失败 dimension={}", level.dimension().identifier(), failure);
             }
         }
     }

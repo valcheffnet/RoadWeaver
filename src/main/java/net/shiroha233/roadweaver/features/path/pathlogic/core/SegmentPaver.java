@@ -2,7 +2,7 @@
 package net.shiroha233.roadweaver.features.path.pathlogic.core;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.SlabBlock;
@@ -39,7 +39,7 @@ public final class SegmentPaver {
             return;
 
         int[] heights = RoadHeightInterpolator.batchInterpolate(positions, segmentIndex, centers, targetY);
-        Map<ResourceLocation, NaturalMaterials> naturalMaterials = roadType == 1 ? new HashMap<>() : Map.of();
+        Map<Identifier, NaturalMaterials> naturalMaterials = roadType == 1 ? new HashMap<>() : Map.of();
 
         for (int i = 0; i < positions.size(); i++) {
             BlockPos widthBlock = positions.get(i);
@@ -53,7 +53,7 @@ public final class SegmentPaver {
             List<BlockState> baseMats;
             List<BlockState> slabs;
             if (roadType == 1) {
-                ResourceLocation biomeId = world.getBiome(pos).unwrapKey().map(key -> key.location()).orElse(null);
+                Identifier biomeId = world.getBiome(pos).unwrapKey().map(key -> key.identifier()).orElse(null);
                 NaturalMaterials selected = naturalMaterials.computeIfAbsent(
                         biomeId, ignored -> resolveNaturalMaterials(world, pos, biomeId));
                 baseMats = selected.base();
@@ -100,7 +100,7 @@ public final class SegmentPaver {
 
     private static NaturalMaterials resolveNaturalMaterials(WorldGenLevel world,
                                                              BlockPos pos,
-                                                             ResourceLocation biomeId) {
+                                                             Identifier biomeId) {
         PresetService.PresetDef preset = PresetService.findNaturalPresetForBiome(biomeId);
         if (preset != null) {
             return new NaturalMaterials(

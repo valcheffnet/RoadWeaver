@@ -1,13 +1,13 @@
 package net.shiroha233.roadweaver.pathfinding.terrain.region;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.shiroha233.roadweaver.map.tile.core.MapTileRect;
 import net.shiroha233.roadweaver.map.tile.core.MapTileScheme;
 
 /**
  * 区域级粗采样边界。
  */
-public record CoarseRegionBounds(ResourceLocation dimensionId,
+public record CoarseRegionBounds(Identifier dimensionId,
                                  int minX,
                                  int minZ,
                                  int maxX,
@@ -30,7 +30,7 @@ public record CoarseRegionBounds(ResourceLocation dimensionId,
         }
     }
 
-    public static CoarseRegionBounds aligned(ResourceLocation dimensionId,
+    public static CoarseRegionBounds aligned(Identifier dimensionId,
                                              int minBlockX,
                                              int minBlockZ,
                                              int maxBlockX,

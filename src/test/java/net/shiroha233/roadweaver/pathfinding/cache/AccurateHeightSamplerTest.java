@@ -33,14 +33,14 @@ class AccurateHeightSamplerTest {
         AccurateHeightSampler sampler = new AccurateHeightSampler(null, backend);
         List<Long> keys = new ArrayList<>();
         for (int chunkX = 0; chunkX <= 256; chunkX++) {
-            keys.add(ChunkPos.asLong(chunkX, 0));
+            keys.add(ChunkPos.pack(chunkX, 0));
         }
 
         Map<Long, AccurateHeightChunk> first = sampler.sampleChunks(keys);
         assertEquals(1, backend.invocations.get());
         assertEquals(257, first.size());
         assertThrows(UnsupportedOperationException.class,
-                () -> first.put(ChunkPos.asLong(999, 0), chunk(999, 0)));
+                () -> first.put(ChunkPos.pack(999, 0), chunk(999, 0)));
 
         sampler.sampleChunks(List.of(keys.getFirst()));
         assertEquals(2, backend.invocations.get(), "the first chunk should have been evicted from the 256-entry LRU");
@@ -52,7 +52,7 @@ class AccurateHeightSamplerTest {
         CountDownLatch release = new CountDownLatch(1);
         FakeChunkBackend backend = new FakeChunkBackend(entered, release);
         AccurateHeightSampler sampler = new AccurateHeightSampler(null, backend);
-        long key = ChunkPos.asLong(-7, 11);
+        long key = ChunkPos.pack(-7, 11);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             Future<Map<Long, AccurateHeightChunk>> first = executor.submit(() -> sampler.sampleChunks(List.of(key)));

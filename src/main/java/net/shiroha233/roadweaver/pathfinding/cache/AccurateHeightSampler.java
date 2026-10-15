@@ -368,7 +368,7 @@ public final class AccurateHeightSampler {
     }
 
     private AccurateHeightChunk chunkAt(int x, int z) {
-        long key = ChunkPos.asLong(x >> 4, z >> 4);
+        long key = ChunkPos.pack(x >> 4, z >> 4);
         AccurateHeightChunk cached = getCached(key);
         if (cached != null) {
             AccurateSamplingStats.recordCacheHit();
@@ -615,7 +615,7 @@ public final class AccurateHeightSampler {
             if (sample != null) {
                 return sample;
             }
-            AccurateHeightChunk chunk = chunkCache.get(ChunkPos.asLong(blockX >> 4, blockZ >> 4));
+            AccurateHeightChunk chunk = chunkCache.get(ChunkPos.pack(blockX >> 4, blockZ >> 4));
             if (chunk == null) {
                 return null;
             }
@@ -660,7 +660,7 @@ public final class AccurateHeightSampler {
     }
 
     private static long tileKey(int blockX, int blockZ) {
-        return ChunkPos.asLong(Math.floorDiv(blockX, 256), Math.floorDiv(blockZ, 256));
+        return ChunkPos.pack(Math.floorDiv(blockX, 256), Math.floorDiv(blockZ, 256));
     }
 
     private void resolveCachedColumns(LinkedHashMap<Long, BlockPos> unresolved,

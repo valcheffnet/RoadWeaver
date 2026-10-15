@@ -39,7 +39,7 @@ public final class AccurateHeightChunk {
     }
 
     public long chunkKey() {
-        return ChunkPos.asLong(chunkX, chunkZ);
+        return ChunkPos.pack(chunkX, chunkZ);
     }
 
     public int worldSurfaceWg(int blockX, int blockZ) {

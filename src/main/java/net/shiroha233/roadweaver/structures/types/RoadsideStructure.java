@@ -6,7 +6,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.StructureManager;
@@ -42,7 +42,7 @@ public class RoadsideStructure extends Structure {
     public static final MapCodec<RoadsideStructure> CODEC = RecordCodecBuilder.mapCodec(instance ->
         instance.group(
             settingsCodec(instance),
-            ResourceLocation.CODEC.fieldOf("template").forGetter(s -> s.templateId),
+            Identifier.CODEC.fieldOf("template").forGetter(s -> s.templateId),
             Vec3i.CODEC.optionalFieldOf("size_hint", new Vec3i(5, 5, 5)).forGetter(s -> s.sizeHint),
             Codec.INT.optionalFieldOf("weight", 10).forGetter(s -> s.weight),
             Codec.BOOL.optionalFieldOf("face_road", true).forGetter(s -> s.faceRoad),
@@ -57,7 +57,7 @@ public class RoadsideStructure extends Structure {
         ).apply(instance, RoadsideStructure::new)
     );
     
-    private final ResourceLocation templateId;
+    private final Identifier templateId;
     private final Vec3i sizeHint;
     private final int weight;
     private final boolean faceRoad;
@@ -72,7 +72,7 @@ public class RoadsideStructure extends Structure {
     
     public RoadsideStructure(
         StructureSettings settings,
-        ResourceLocation templateId,
+        Identifier templateId,
         Vec3i sizeHint,
         int weight,
         boolean faceRoad,
@@ -110,7 +110,7 @@ public class RoadsideStructure extends Structure {
         return ModStructureTypes.ROADSIDE;
     }
     
-    public ResourceLocation templateId() {
+    public Identifier templateId() {
         return templateId;
     }
     
@@ -178,7 +178,7 @@ public class RoadsideStructure extends Structure {
         );
         builder.addPiece(piece);
         
-        ChunkPos chunkPos = new ChunkPos(pos);
+        ChunkPos chunkPos = ChunkPos.containing(pos);
         PiecesContainer container = builder.build();
         StructureStart start = new StructureStart(this, chunkPos, 0, container);
         

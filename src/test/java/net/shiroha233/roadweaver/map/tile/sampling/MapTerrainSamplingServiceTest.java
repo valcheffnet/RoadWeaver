@@ -1,7 +1,7 @@
 /* 文件职责：验证主动地图采样的模式路由、范围上限与加权进度。 */
 package net.shiroha233.roadweaver.map.tile.sampling;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.shiroha233.roadweaver.config.sub.TerrainSamplingMode;
 import net.shiroha233.roadweaver.pathfinding.terrain.region.AccurateRegionBounds;
 import net.shiroha233.roadweaver.pathfinding.terrain.region.CoarseRegionBounds;
@@ -14,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MapTerrainSamplingServiceTest {
-    private static final ResourceLocation DIMENSION =
-            ResourceLocation.fromNamespaceAndPath("minecraft", "overworld");
+    private static final Identifier DIMENSION =
+            Identifier.fromNamespaceAndPath("minecraft", "overworld");
 
     @Test
     void routesManualSamplingFromTheActualEffectiveMode() {

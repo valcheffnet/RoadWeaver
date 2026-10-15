@@ -85,7 +85,7 @@ public final class RoadWorldgenPlanCache {
         private volatile long globalRevision;
 
         RoadChunkPlan get(ServerLevel level, ChunkPos chunkPos, PlanConfig requested) {
-            long key = chunkPos.toLong();
+            long key = chunkPos.pack();
             // 有界重试：持续失效下 while(true) 会让工作线程空转吃满一个核。
             // 该计划只是密度戳缓存，略微陈旧远优于持续占用 CPU。
             for (int attempt = 1; ; attempt++) {
@@ -146,7 +146,7 @@ public final class RoadWorldgenPlanCache {
                 int chunkZ = ChunkPos.getZ(packed);
                 for (int deltaZ = -1; deltaZ <= 1; deltaZ++) {
                     for (int deltaX = -1; deltaX <= 1; deltaX++) {
-                        long affected = ChunkPos.asLong(chunkX + deltaX, chunkZ + deltaZ);
+                        long affected = ChunkPos.pack(chunkX + deltaX, chunkZ + deltaZ);
                         chunkRevisions.put(affected, revision);
                         plans.remove(affected);
                     }

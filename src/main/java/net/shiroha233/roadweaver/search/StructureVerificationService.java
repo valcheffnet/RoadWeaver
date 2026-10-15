@@ -1,7 +1,7 @@
 package net.shiroha233.roadweaver.search;
 
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerChunkCache;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -66,7 +66,7 @@ public final class StructureVerificationService {
         StructureCheck checker = new StructureCheck(
                 scanAccess,
                 registryAccess,
-                server.getStructureManager(),
+                server.getStructureTemplateManager(),
                 level.dimension(),
                 generator,
                 randomState,
@@ -76,7 +76,7 @@ public final class StructureVerificationService {
                 server.getFixerUpper()
         );
 
-        Registry<Structure> structureRegistry = registryAccess.registryOrThrow(Registries.STRUCTURE);
+        Registry<Structure> structureRegistry = registryAccess.lookupOrThrow(Registries.STRUCTURE);
 
         ArrayList<StructureInfo> result = new ArrayList<>();
 
@@ -87,19 +87,19 @@ public final class StructureVerificationService {
                 continue;
             }
 
-            ResourceLocation rl = ResourceLocation.tryParse(idStr);
+            Identifier rl = Identifier.tryParse(idStr);
             if (rl == null) {
                 result.add(info);
                 continue;
             }
 
-            Structure structure = structureRegistry.get(rl);
+            Structure structure = structureRegistry.getValue(rl);
             if (structure == null) {
                 result.add(info);
                 continue;
             }
 
-            var structureHolder = structureRegistry.getHolder(rl);
+            var structureHolder = structureRegistry.get(rl);
             if (structureHolder.isEmpty()) {
                 result.add(info);
                 continue;

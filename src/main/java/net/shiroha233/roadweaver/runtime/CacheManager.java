@@ -110,7 +110,7 @@ public final class CacheManager {
             StructureFileStorage.flush(level);
         } catch (Exception e) {
             LOGGER.warn("刷新维度 {} 结构状态失败: {}",
-                    level.dimension().location(), e.getMessage());
+                    level.dimension().identifier(), e.getMessage());
         }
 
         TerrainSamplingSessions.clear(level);
@@ -128,14 +128,14 @@ public final class CacheManager {
             SignTextService.flushPersistentFallback(level);
         } catch (Exception e) {
             LOGGER.warn("刷新维度 {} 路牌文本失败: {}",
-                    level.dimension().location(), e.getMessage());
+                    level.dimension().identifier(), e.getMessage());
         }
 
         try {
             RoadShardStorage.closeConnection(level);
         } catch (Exception e) {
             LOGGER.warn("关闭维度 {} 数据库连接失败: {}",
-                    level.dimension().location(), e.getMessage());
+                    level.dimension().identifier(), e.getMessage());
         }
 
         RoadSpatialIndex.clearCache(level);
@@ -145,7 +145,7 @@ public final class CacheManager {
         BridgeTemplateStructureRegistry.clearCache();
         SignTextService.onDimensionUnload(level);
 
-        LOGGER.debug("CacheManager: 维度 {} 缓存已清理", level.dimension().location());
+        LOGGER.debug("CacheManager: 维度 {} 缓存已清理", level.dimension().identifier());
     }
 
     /**

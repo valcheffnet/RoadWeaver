@@ -184,9 +184,9 @@ public final class RoadsideStructurePrecomputer {
             // The anchor of the structure placement. The placeX and placeZ value has been transformed by the
             // switch-case above.
             BlockPos anchor = new BlockPos(placeX, placeY, placeZ);
-            ChunkPos chunkPos = new ChunkPos(anchor);
+            ChunkPos chunkPos = ChunkPos.containing(anchor);
 
-            long chunkKey = chunkPos.toLong();
+            long chunkKey = chunkPos.pack();
             if (placedChunks.contains(chunkKey) ||
                     !structure.skipTerrainCheck() &&
                     !checkTerrainConditions(center, sizeHint, cache, terrain, level, heightmap, useBaseHeight)) {
@@ -208,7 +208,7 @@ public final class RoadsideStructurePrecomputer {
             placedChunks.add(chunkKey);
             placedCount++;
             
-            LOGGER.debug("Precomputed structure {} at {} for chunk [{}, {}]", entry.id(), anchor, chunkPos.x, chunkPos.z);
+            LOGGER.debug("Precomputed structure {} at {} for chunk [{}, {}]", entry.id(), anchor, chunkPos.x(), chunkPos.z());
         }
         
         return placedCount;

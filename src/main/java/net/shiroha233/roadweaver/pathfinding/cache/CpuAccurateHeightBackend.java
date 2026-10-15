@@ -201,7 +201,7 @@ public final class CpuAccurateHeightBackend implements AccurateHeightBackend {
         LinkedHashMap<Long, List<Map.Entry<Long, BlockPos>>> grouped = new LinkedHashMap<>();
         for (Map.Entry<Long, BlockPos> entry : positions.entrySet()) {
             BlockPos position = entry.getValue();
-            long chunkKey = ChunkPos.asLong(position.getX() >> 4, position.getZ() >> 4);
+            long chunkKey = ChunkPos.pack(position.getX() >> 4, position.getZ() >> 4);
             grouped.computeIfAbsent(chunkKey, ignored -> new ArrayList<>()).add(entry);
         }
         return grouped;
@@ -210,7 +210,7 @@ public final class CpuAccurateHeightBackend implements AccurateHeightBackend {
     private static LinkedHashMap<Long, IntList> groupGridIndexesByChunk(AccurateHeightGridRequest request) {
         LinkedHashMap<Long, IntList> grouped = new LinkedHashMap<>();
         for (int index = 0; index < request.sampleCount(); index++) {
-            long chunkKey = ChunkPos.asLong(request.blockX(index) >> 4, request.blockZ(index) >> 4);
+            long chunkKey = ChunkPos.pack(request.blockX(index) >> 4, request.blockZ(index) >> 4);
             grouped.computeIfAbsent(chunkKey, ignored -> new IntList()).add(index);
         }
         return grouped;
