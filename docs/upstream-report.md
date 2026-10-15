@@ -108,4 +108,4 @@ These only matter for a 26.x port, but they cost us time, so they may save you s
 - `PresetService.reload()` deletes any preset file whose `dimensions` is not exactly `["minecraft:overworld"]`. That is easy to lose work to; logging and skipping such a file would be safer.
 - `tags/worldgen/biome/has_biome_anchors.json` is still unused (#36).
 
-We are happy to share the changes as patches against `1.21.1-Architectury` if any of them are useful.
+The data fixes (items 1, 2, 3, 6 and 8) are submitted as pull requests against `1.21.1-Architectury`. The code fixes were only tested on our 26.3 port and are on the `26.3-server` branch.
