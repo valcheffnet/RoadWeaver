@@ -7,11 +7,8 @@ import net.shiroha233.roadweaver.persistence.files.SignTextFileStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,13 +36,7 @@ final class SignTextFileIo {
     });
 
     private static final Object LOCK = new Object();
-    private static final LinkedHashMap<Long, List<SignTextFileStorage.PendingSignText>> CACHE =
-            new LinkedHashMap<>(16, 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<Long, List<SignTextFileStorage.PendingSignText>> eldest) {
-                    return size() > CACHE_MAX_CHUNKS;
-                }
-            };
+    private static final SignTextChunkCache CACHE = new SignTextChunkCache(CACHE_MAX_CHUNKS);
     /** 已提交加载但未完成的分片，防止主线程重复提交。 */
     private static final Set<Long> LOADING = new HashSet<>();
 
@@ -62,11 +53,9 @@ final class SignTextFileIo {
         if (limit <= 0) return List.of();
         long chunkKey = ChunkPos.pack(chunkX, chunkZ);
         synchronized (LOCK) {
-            List<SignTextFileStorage.PendingSignText> cached = CACHE.get(chunkKey);
+            List<SignTextFileStorage.PendingSignText> cached = CACHE.get(chunkKey, limit);
             if (cached != null) {
-                return cached.size() <= limit
-                        ? new ArrayList<>(cached)
-                        : new ArrayList<>(cached.subList(0, limit));
+                return cached;
             }
             if (LOADING.add(chunkKey)) {
                 submitLoad(level, chunkKey, chunkX, chunkZ);
@@ -91,10 +80,7 @@ final class SignTextFileIo {
                 if (epoch != EPOCH.get()) return;
                 SignTextFileStorage.deleteByIds(level, ids);
                 synchronized (LOCK) {
-                    List<SignTextFileStorage.PendingSignText> cached = CACHE.get(chunkKey);
-                    if (cached != null) {
-                        cached.removeIf(row -> row != null && ids.contains(row.id()));
-                    }
+                    CACHE.removeIds(chunkKey, ids);
                 }
             } catch (Throwable t) {
                 LOGGER.warn("回收已写入路牌文本失败 chunk=({}, {})", chunkX, chunkZ, t);
@@ -116,8 +102,10 @@ final class SignTextFileIo {
                 SignTextFileStorage.upsertBatch(level, List.of(write));
                 // 磁盘已最新，丢弃可能过期的缓存副本
                 synchronized (LOCK) {
-                    CACHE.remove(chunkKey);
+                    CACHE.invalidate(chunkKey);
                 }
+                // The chunk may already have polled the old copy and dropped its mark; poll it again.
+                requeueIfLive(epoch, level, chunkKey);
             } catch (Throwable t) {
                 LOGGER.warn("持久化路牌文本失败 pos={}", write.pos(), t);
             }
@@ -132,7 +120,7 @@ final class SignTextFileIo {
                 List<SignTextFileStorage.PendingSignText> rows =
                         SignTextFileStorage.queryByChunk(level, chunkX, chunkZ, Integer.MAX_VALUE);
                 synchronized (LOCK) {
-                    CACHE.put(chunkKey, new ArrayList<>(rows));
+                    CACHE.putLoaded(chunkKey, rows);
                 }
                 // 加载完成后重新标记，主线程无需轮询等待
                 requeueIfLive(epoch, level, chunkKey);
