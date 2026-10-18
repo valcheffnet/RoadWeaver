@@ -5,5 +5,6 @@ package net.shiroha233.roadweaver.core.model;
  */
 public enum SpanType {
     BRIDGE,
-    TUNNEL
+    TUNNEL,
+    STAIRS
 }

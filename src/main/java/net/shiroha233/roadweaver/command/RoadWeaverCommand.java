@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * /roadweaver reload: re-reads config/roadweaver/roadweaver.json and the road presets.
- * Replaces the client config screens of upstream for a server without the mod on clients.
+ * /roadweaver reload: re-reads config/roadweaver/roadweaver.json and the road presets, so a server can change them
+ * without a client config screen.
  */
 public final class RoadWeaverCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("roadweaver");

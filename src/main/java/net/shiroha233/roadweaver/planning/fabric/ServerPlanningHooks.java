@@ -2,6 +2,7 @@
 package net.shiroha233.roadweaver.planning.fabric;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLevelEvents;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +18,7 @@ import net.shiroha233.roadweaver.persistence.WorldDataProvider;
 import net.shiroha233.roadweaver.planning.RoadPlanningService;
 import net.shiroha233.roadweaver.runtime.CacheManager;
 import net.shiroha233.roadweaver.runtime.ThreadPoolManager;
+import net.shiroha233.roadweaver.structures.village.VillageStreetConnector;
 
 import java.util.List;
 
@@ -32,7 +34,7 @@ public final class ServerPlanningHooks {
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             CacheManager.onServerStarted();
             ThreadPoolManager.onServerStarted(server);
-            SignTextService.clearPending();
+            // Keep queued sign text: the spawn chunks are generated before this event and their signs are still waiting.
             IdleRoadGenerationService.onServerStarted();
             
             ServerLevel level = server.getLevel(net.minecraft.world.level.Level.OVERWORLD);
@@ -74,6 +76,7 @@ public final class ServerPlanningHooks {
                 IdleRoadGenerationService.tick(level);
                 RoadGenerationService.tick(level);
                 SignTextService.tick(level);
+                VillageStreetConnector.tick(level);
             }
         });
 
@@ -84,7 +87,12 @@ public final class ServerPlanningHooks {
             RoadPlanningService.resetAll();
             CacheManager.onServerStopping(server.getAllLevels());
             SignTextService.clearPending();
+            VillageStreetConnector.clear();
         });
+
+        // Sign text is written once the chunk is a full LevelChunk; generation alone marks the chunk too early.
+        ServerChunkEvents.CHUNK_LOAD.register((level, chunk, generated) ->
+                SignTextService.onChunkReady(level, chunk.getPos()));
 
         ServerLevelEvents.UNLOAD.register((server, level) -> CacheManager.onDimensionUnload(level));
     }

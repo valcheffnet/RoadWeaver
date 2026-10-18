@@ -4,6 +4,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.shiroha233.roadweaver.features.path.decoration.text.SignTextService;
 import net.shiroha233.roadweaver.structures.precompute.StructureInjector;
+import net.shiroha233.roadweaver.structures.village.VillageStreetConnector;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,5 +32,6 @@ public class ServerLevelStructureMixin {
         ServerLevel level = (ServerLevel) (Object) this;
         StructureInjector.injectPendingStructures(level, chunk);
         SignTextService.onChunkReady(level, chunk.getPos());
+        VillageStreetConnector.onStructureStartsAvailable(level, chunk);
     }
 }

@@ -5,7 +5,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.shiroha233.roadweaver.config.ModConfig;
@@ -17,11 +20,15 @@ import net.shiroha233.roadweaver.features.path.pathlogic.pathfinding.RoadHeightI
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 路面铺设器
  */
 public final class SegmentPaver {
+    /** Blocks above the road surface searched for a sign or lamp post. */
+    private static final int POST_SEARCH = 3;
+
     private SegmentPaver() {}
 
     public static void paveSegment(WorldGenLevel world,
@@ -34,6 +41,28 @@ public final class SegmentPaver {
             List<BlockState> slabMaterials,
             RandomSource random,
             ModConfig cfg) {
+        paveSegment(world, seg, segmentIndex, centers, targetY, roadType, materials, slabMaterials, random, cfg, Set.of(),
+                false);
+    }
+
+    /**
+     * As above, leaving the columns in {@code skipColumns} (stair steps of this or another road) untouched. With
+     * {@code keepPosts}, a column that already holds a fence or wall post (a sign or lamp of the road this one leads on
+     * from) is left as it is too: a village connector is paved after that road, and clearing the column would cut the
+     * post and leave the sign or lantern in the air.
+     */
+    public static void paveSegment(WorldGenLevel world,
+            RoadSegmentPlacement seg,
+            int segmentIndex,
+            List<BlockPos> centers,
+            int[] targetY,
+            int roadType,
+            List<BlockState> materials,
+            List<BlockState> slabMaterials,
+            RandomSource random,
+            ModConfig cfg,
+            Set<Long> skipColumns,
+            boolean keepPosts) {
         List<BlockPos> positions = seg.positions();
         if (positions.isEmpty())
             return;
@@ -43,10 +72,14 @@ public final class SegmentPaver {
 
         for (int i = 0; i < positions.size(); i++) {
             BlockPos widthBlock = positions.get(i);
+            if (skipColumns.contains(StairPaver.columnKey(widthBlock.getX(), widthBlock.getZ()))) continue;
             int y = heights[i];
             BlockPos pos = new BlockPos(widthBlock.getX(), y, widthBlock.getZ());
 
             if (StructureAvoidanceService.shouldAvoid(world, pos)) {
+                continue;
+            }
+            if (keepPosts && holdsPost(world, pos)) {
                 continue;
             }
 
@@ -80,7 +113,19 @@ public final class SegmentPaver {
                     world.setBlock(pos, slabState, 3);
                 }
             }
+
+            if (!baseMats.isEmpty()) {
+                RoadSupports.support(world, pos.below(), RoadSlabs.isStoneRoad(baseMats));
+            }
         }
+    }
+
+    private static boolean holdsPost(WorldGenLevel world, BlockPos pos) {
+        for (int up = 0; up < POST_SEARCH; up++) {
+            Block block = world.getBlockState(pos.above(up)).getBlock();
+            if (block instanceof FenceBlock || block instanceof WallBlock) return true;
+        }
+        return false;
     }
 
     private static boolean shouldPlaceSlab(int x, int z, int currentY,
@@ -103,9 +148,9 @@ public final class SegmentPaver {
                                                              Identifier biomeId) {
         PresetService.PresetDef preset = PresetService.findNaturalPresetForBiome(biomeId);
         if (preset != null) {
-            return new NaturalMaterials(
-                    PresetService.toBlockStatesFromIdsAllowEmpty(preset.materials()),
-                    PresetService.toBlockStatesFromIdsAllowEmpty(preset.slabMaterials()));
+            List<BlockState> base = PresetService.toBlockStatesFromIdsAllowEmpty(preset.materials());
+            return new NaturalMaterials(base,
+                    RoadSlabs.matching(base, PresetService.toBlockStatesFromIdsAllowEmpty(preset.slabMaterials())));
         }
         return new NaturalMaterials(
                 net.shiroha233.roadweaver.features.path.decoration.material.BiomeRoadMaterialSelector

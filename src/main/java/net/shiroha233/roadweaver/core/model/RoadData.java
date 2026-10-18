@@ -19,7 +19,8 @@ public record RoadData(
         List<RoadSpan> spans,
         List<Integer> targetY,
         long ownerA2dKey,
-        long ownerB2dKey
+        long ownerB2dKey,
+        boolean villageConnector
 ) {
     public static final long NO_OWNER_2D = Long.MIN_VALUE;
 
@@ -33,9 +34,16 @@ public record RoadData(
                     RoadSpan.CODEC.listOf().optionalFieldOf("spans", new ArrayList<>()).forGetter(RoadData::spans),
                     Codec.INT.listOf().optionalFieldOf("target_y", new ArrayList<>()).forGetter(RoadData::targetY),
                     Codec.LONG.optionalFieldOf("owner_a_2d", NO_OWNER_2D).forGetter(RoadData::ownerA2dKey),
-                    Codec.LONG.optionalFieldOf("owner_b_2d", NO_OWNER_2D).forGetter(RoadData::ownerB2dKey)
+                    Codec.LONG.optionalFieldOf("owner_b_2d", NO_OWNER_2D).forGetter(RoadData::ownerB2dKey),
+                    Codec.BOOL.optionalFieldOf("village_connector", false).forGetter(RoadData::villageConnector)
             ).apply(instance, RoadData::new)
     );
+
+    public RoadData(int width, int roadType, List<BlockState> materials, List<BlockState> slabMaterials,
+                    List<RoadSegmentPlacement> roadSegmentList, List<RoadSpan> spans, List<Integer> targetY,
+                    long ownerA2dKey, long ownerB2dKey) {
+        this(width, roadType, materials, slabMaterials, roadSegmentList, spans, targetY, ownerA2dKey, ownerB2dKey, false);
+    }
 
     public boolean hasOwnerPair() {
         return ownerA2dKey != NO_OWNER_2D && ownerB2dKey != NO_OWNER_2D;

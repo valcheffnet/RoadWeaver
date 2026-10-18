@@ -27,15 +27,15 @@ import org.slf4j.LoggerFactory;
 
 import it.unimi.dsi.fastutil.longs.LongSet;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 初始小屋放置器。
- * Server-side 26.3 fork: vanilla generates the spawn chunks while it searches a spawn point, before structures can be
- * injected into them, so the cabin is no longer queued as a pending structure. ensurePlaced() only registers the
- * anchor as a road endpoint (without loading chunks); placePlannedCabin() builds the cabin into the world once the
- * spawn chunks exist.
+ * Vanilla generates the spawn chunks while it searches a spawn point, before structures can be injected into them, so
+ * the cabin is not queued as a pending structure: ensurePlaced() only registers the anchor as a road endpoint (without
+ * loading chunks), and placePlannedCabin() builds the cabin into the world once the spawn chunks exist.
  */
 public final class SpawnCabinPlacer {
     private static final Logger LOGGER = LoggerFactory.getLogger("roadweaver");
@@ -121,27 +121,54 @@ public final class SpawnCabinPlacer {
     private static final int SEARCH_STEP = 4;
     /** Gap kept between the cabin and other structure pieces. */
     private static final int CLEARANCE = 2;
+    /** Largest difference in ground height under the cabin that still counts as level. */
+    private static final int MAX_GROUND_SPREAD = 1;
 
     /**
-     * Nearest spot to {@code anchor} (spiral in {@link #SEARCH_STEP} block steps) where the cabin footprint touches no
-     * structure piece and no road. The returned position has the cabin's foundation layer in the top ground block.
+     * Spot near {@code anchor} (spiral in {@link #SEARCH_STEP} block steps) where the cabin footprint touches no
+     * structure piece and no road, preferring the nearest one whose ground is level within {@link #MAX_GROUND_SPREAD}
+     * blocks; on uneven ground the cabin is set into the slope and the template clears a pit around it. Without a
+     * level spot the flattest free one is used. The returned position has the cabin's foundation layer at the median
+     * ground height of its footprint.
      */
     private static BlockPos findFreeSpot(ServerLevel level, BlockPos anchor, Vec3i size) {
+        BlockPos flattest = null;
+        int flattestSpread = Integer.MAX_VALUE;
         for (int ring = 0; ring <= SEARCH_RADIUS / SEARCH_STEP; ring++) {
             for (int dx = -ring; dx <= ring; dx++) {
                 for (int dz = -ring; dz <= ring; dz++) {
                     if (Math.max(Math.abs(dx), Math.abs(dz)) != ring) continue;
                     int x = anchor.getX() + dx * SEARCH_STEP;
                     int z = anchor.getZ() + dz * SEARCH_STEP;
-                    int y = groundTop(level, x + size.getX() / 2, z + size.getZ() / 2);
+                    int[] heights = footprintHeights(level, x, z, size);
+                    int y = heights[heights.length / 2];
+                    int spread = heights[heights.length - 1] - heights[0];
                     BoundingBox box = new BoundingBox(x, y, z, x + size.getX() - 1, y + size.getY() - 1, z + size.getZ() - 1);
-                    if (!touchesStructure(level, box.inflatedBy(CLEARANCE)) && !touchesRoad(level, box)) {
-                        return new BlockPos(x, y, z);
+                    if (touchesStructure(level, box.inflatedBy(CLEARANCE)) || touchesRoad(level, box)) continue;
+                    if (spread <= MAX_GROUND_SPREAD) return new BlockPos(x, y, z);
+                    if (spread < flattestSpread) {
+                        flattestSpread = spread;
+                        flattest = new BlockPos(x, y, z);
                     }
                 }
             }
         }
-        return null;
+        return flattest;
+    }
+
+    /** Ground heights over the footprint, every second block, sorted. */
+    private static int[] footprintHeights(ServerLevel level, int x, int z, Vec3i size) {
+        int nx = (size.getX() + 1) / 2;
+        int nz = (size.getZ() + 1) / 2;
+        int[] heights = new int[nx * nz];
+        int i = 0;
+        for (int a = 0; a < nx; a++) {
+            for (int b = 0; b < nz; b++) {
+                heights[i++] = groundTop(level, x + Math.min(a * 2, size.getX() - 1), z + Math.min(b * 2, size.getZ() - 1));
+            }
+        }
+        Arrays.sort(heights);
+        return heights;
     }
 
     /**

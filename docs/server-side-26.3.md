@@ -35,7 +35,21 @@ The first road generation on a new world blocks server startup until it finishes
 
 Signs carry English fallback text, so a vanilla client shows "Next Location 847 m" instead of a translation key.
 
-On a new world the network is planned at the very start of vanilla's spawn search. Vanilla generates the chunks around spawn while it searches, so planning any later would leave them without roads. The plan is centred on the point where that search starts, and the spawn cabin is built straight into the world once the spawn chunks exist. Expect it a few blocks from the world spawn. On the test seed the spawn is 0 107 0 and the cabin corner is 8 106 8.
+On a new world the network is planned at the very start of vanilla's spawn search. Vanilla generates the chunks around spawn while it searches, so planning any later would leave them without roads. The plan is centred on the point where that search starts, and the spawn cabin is built straight into the world once the spawn chunks exist, on level ground within 32 blocks of the spawn that is clear of structures and roads. On an existing world no cabin is built, since the area around its spawn may already be built on.
+
+## Added in this fork
+
+These are new behaviour rather than ports; they work with vanilla clients like everything else.
+
+- Roads continue to the nearest street of a village instead of stopping in front of it. The connecting path goes around the houses.
+- Where the ground climbs faster than the slope limit, the road gets stone stairs with landings, a low wall where the ground drops away and a lantern on each landing, instead of a deep cut.
+- Short humps and dips are levelled out of a road.
+- Over a deep dip or along a cliff edge the road becomes a plank or stone brick deck on posts instead of a sheet of dirt in the air. A road over a cave keeps its ground.
+- Half slabs match the road: mud brick on dirt paths, cobblestone or stone brick on stone, sandstone on sand. The natural presets no longer use wooden slabs.
+- Side roads merge into a main road only where the two are close in height, and stay within the slope limit where they do.
+- Roadside structures take the real ground height of their footprint and skip slopes steeper than 3 blocks; lamps and sign posts stand on the ground and keep off road columns.
+
+Known issues: where a road makes a hairpin on a steep slope the two legs can run side by side a few blocks apart with no wall between them, and a few distance signs can stay without text.
 
 ## The command
 
@@ -69,6 +83,8 @@ Everything lives in `config/roadweaver/`.
 | `roadAppearance.roadSignsEnabled` | `true` | Distance signs at road ends. |
 | `roadAppearance.tunnelEnabled` | `false` | Dig tunnels through hills instead of going over them. |
 | `roadAppearance.spawnCabinEnabled` | `true` | Small cabin at world spawn. |
+| `roadAppearance.roadStairsEnabled` | `true` | Stairs on slopes too steep for the road. |
+| `structurePrediction.connectVillageStreets` | `true` | Continue roads to the nearest village street. |
 | `bridge.enabled` | `true` | Bridges over water. `maxLengthBlocks` (100) caps their length. |
 | `roadsideStructure.enabled` | `true` | Benches, campfires, campsites and graves next to roads. |
 | `roadsideVillage.enabled` | `true` | Extra small villages along long roads. `spawnChance` is 0.3. |

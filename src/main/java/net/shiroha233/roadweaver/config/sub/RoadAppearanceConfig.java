@@ -22,6 +22,8 @@ public final class RoadAppearanceConfig implements SubConfig {
     private boolean preventTreesOnRoad = true;
     private int maxSlopeStepPerTwoSegments = RoadConstants.DEFAULT_MAX_SLOPE_STEP;
     private boolean slopeLimitEnabled = true;
+    /** Build stairs where the ground is steeper than the slope limit, instead of cutting and filling the slope. */
+    private boolean roadStairsEnabled = true;
 
     @Override
     public void sanitize() {
@@ -51,6 +53,7 @@ public final class RoadAppearanceConfig implements SubConfig {
         copy.preventTreesOnRoad = this.preventTreesOnRoad;
         copy.maxSlopeStepPerTwoSegments = this.maxSlopeStepPerTwoSegments;
         copy.slopeLimitEnabled = this.slopeLimitEnabled;
+        copy.roadStairsEnabled = this.roadStairsEnabled;
         return copy;
     }
 
@@ -75,6 +78,8 @@ public final class RoadAppearanceConfig implements SubConfig {
     public int roadClearHeight() { return roadClearHeight; }
     public void setRoadClearHeight(int v) { this.roadClearHeight = v; }
     public boolean tunnelEnabled() { return tunnelEnabled; }
+    public boolean roadStairsEnabled() { return roadStairsEnabled; }
+    public void setRoadStairsEnabled(boolean v) { this.roadStairsEnabled = v; }
     public void setTunnelEnabled(boolean v) { this.tunnelEnabled = v; }
     public int tunnelClearHeight() { return tunnelClearHeight; }
     public void setTunnelClearHeight(int v) { this.tunnelClearHeight = v; }

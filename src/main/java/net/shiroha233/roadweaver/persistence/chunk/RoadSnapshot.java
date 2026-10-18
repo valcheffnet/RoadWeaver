@@ -230,7 +230,8 @@ public final class RoadSnapshot {
                 copyList(source.spans()),
                 copyList(source.targetY()),
                 source.ownerA2dKey(),
-                source.ownerB2dKey());
+                source.ownerB2dKey(),
+                source.villageConnector());
     }
 
     private static <T> List<T> copyList(List<T> source) {

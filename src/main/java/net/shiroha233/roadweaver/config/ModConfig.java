@@ -88,6 +88,10 @@ public final class ModConfig {
         return structurePrediction.structureAvoidanceEnabled();
     }
 
+    public boolean roadStairsEnabled() {
+        return roadAppearance.roadStairsEnabled();
+    }
+
     public boolean bridgeEnabled() {
         return bridge.enabled();
     }
@@ -182,6 +186,10 @@ public final class ModConfig {
 
     public int villageRoadOffset() {
         return structurePrediction.villageRoadOffset();
+    }
+
+    public boolean connectVillageStreets() {
+        return structurePrediction.connectVillageStreets();
     }
 
     public int otherStructureRoadOffset() {

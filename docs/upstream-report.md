@@ -74,7 +74,7 @@ On a new world, `MinecraftServer.createLevels()` calls `setInitialSpawn()`, whic
 
 We confirmed this on 26.3: the four chunks around spawn had no road blocks and no cabin. The 1.21.1 code calls `setInitialSpawn` before `prepareLevels` in the same way, so we expect the same result there, but we did not run 1.21.1 to check.
 
-We moved the initial planning to the start of `setInitialSpawn` and centred it on the point where vanilla begins its search: the middle of `ChunkGenerator.getOrigin(randomState)`, with the height from `getBaseHeight`, so no chunk is generated yet. The cabin is built directly with the existing (unused) `SpawnCabinStructure.placeAt` once `setInitialSpawn` returns, one block into the ground. Before that it checks its footprint against structure pieces and the road and moves up to 32 blocks away if the spot is taken. Without that check we once had the cabin built inside a roadside village house.
+We moved the initial planning to the start of `setInitialSpawn` and centred it on the point where vanilla begins its search: the middle of `ChunkGenerator.getOrigin(randomState)`, with the height from `getBaseHeight`, so no chunk is generated yet. The cabin is built directly with the existing (unused) `SpawnCabinStructure.placeAt` once `setInitialSpawn` returns, one block into the ground. Before that it checks its footprint against structure pieces and the road and moves up to 32 blocks away if the spot is taken. Without that check we once had the cabin built inside a roadside village house. It also prefers a spot where the ground under the whole footprint is level within one block, and sets the floor at the median height of the footprint: placed by the ground at its centre on a slope, the template cleared a pit two to three blocks deep around the cabin. On 1.21.1 vanilla starts the spawn search at `randomState.sampler().findSpawnPosition()` rather than the generator origin, so the predicted spawn is the middle of that chunk.
 
 ### 10. Structures with thin or no terrain adaptation can hang over slopes
 
@@ -108,4 +108,55 @@ These only matter for a 26.x port, but they cost us time, so they may save you s
 - `PresetService.reload()` deletes any preset file whose `dimensions` is not exactly `["minecraft:overworld"]`. That is easy to lose work to; logging and skipping such a file would be safer.
 - `tags/worldgen/biome/has_biome_anchors.json` is still unused (#36).
 
-The data fixes (items 1, 2, 3, 6 and 8) are submitted as pull requests against `1.21.1-Architectury`. The code fixes were only tested on our 26.3 port and are on the `26.3-server` branch.
+## Found later, while building the full 26.2 version
+
+We later backported the port to 26.2 and put the client side back, so it can be installed on both sides like the original. Testing that build turned up four more bugs that are in the 1.21.x code as well, because the code involved is unchanged apart from API names.
+
+### 13. Some road signs stay empty
+
+Sign text is not written while a chunk generates. `DistanceSignDecoration` and `SeaQuestionSignDecoration` queue it in `SignTextShardStorage`, and `SignTextService.processChunk` writes it once the chunk is marked dirty and is a full chunk. Two things lose queued text.
+
+- `ServerPlanningHooks` calls `SignTextService.clearPending()` on `SERVER_STARTED`. The chunks around spawn are generated before that event, so the text of every sign near spawn is deleted. On a fresh world we logged 552 dirty chunks and one pending sign being cleared at that moment.
+- A chunk is only marked when its structure starts become available or when a player stands in it. If it is not a full chunk yet when the mark is processed, `processChunk` returns and the mark is gone. Signs at the edge of a player's view distance can stay empty this way.
+
+In our test worlds about one sign in four had no text on either side (18 with text and 7 empty in one 26.3 world). We removed the `clearPending()` call on start (stopping still clears) and mark every chunk again from `ServerChunkEvents.CHUNK_LOAD`, which fires when a chunk becomes a full chunk and also covers queue entries that were flushed to disk before a restart. A fresh world then had text on every sign, including the one at spawn.
+
+### 14. A side road can drop several blocks per segment where it merges
+
+`RoadSnapService.trySnap` replaces the side road's segments near the main road with the main road's segments and heights, and blends over `ROAD_SNAP_TRANSITION_SEGMENTS` (3). Nothing applies the slope limit again afterwards. Where the main road runs higher than the side road's own path, the side road falls the whole difference within those few segments. In our world a side road went from 108 to 94 in four segments (108, 105, 101, 98, 94), which builds a staircase straight down a hillside, while the limit is one block per two segments. We counted steps of 27, 9 and 5 blocks in another world.
+
+The deeper cause is that `markSnapTargets` only compares horizontal distance (12 blocks to start, 24 to continue). A road on a ridge and a road in the valley below it are close on the map, so they get merged even when they are 13 blocks apart in height. Holding the side road to the slope limit alone then left it on a narrow raised wall of earth for some 25 segments, which looked no better.
+
+We changed two things. `markSnapTargets` only starts or continues a merge where the two roads are within 3 blocks of each other in height, so the side road keeps its own path along the terrain until the roads are level. And `JunctionSlopeLimiter` handles the short transitions that remain: after snapping, segments that sit on the main road or on bridges keep their heights, and every other segment is held to the same rule as a road's own heights (`maxSlopeStepPerTwoSegments`, at most half of it per segment, and at most `step * ceil(d / 2)` away from a fixed segment `d` segments away). On a fresh world no road had two neighbouring segments more than one block apart in height afterwards, where there were eight such steps before.
+
+### 15. Roads over a deep dip hang on a sheet of dirt
+
+`RoadChunkPlanCompiler` raises the terrain under a road with a density stamp that fades out over `FILL_DEPTH` (6) blocks below the road. Where the ground lies deeper than that, at a dip, a cliff edge or a cave mouth, the stamp produces a thin sheet of dirt at road level with air under it, and the road is paved on top. From the side it looks like a platform floating next to the hill. In one test world 64 road segments had two or more blocks of air under their surface, up to nine.
+
+We check each road column after paving (`RoadSupports`). Only a gap that opens to the side counts: some column within three blocks beside the road must be open from the road surface down to the gap. A road over a cave keeps its ground, which our first version of this check got wrong and turned into planks. A gap of one or two blocks is filled with dirt like an embankment. Over a deeper gap the hanging dirt is removed and the road becomes a deck of planks in the biome's wood, or stone bricks on a stone road, with posts down to the ground every three blocks: fences up to four blocks high, stone brick pillars above that.
+
+### 16. Sign posts and lamps can stand a block above the ground
+
+`Decoration.computeSurfacePos` takes the height from `Heightmap.Types.WORLD_SURFACE_WG`, which counts any non-air block, including grass, flowers and pink petals. In a cherry grove a distance sign stood on top of a flower, one block above the ground, and the extra plank `ensureFoundation` puts under it hung in the air. We now step down from that height through replaceable blocks that are not fluids, at most four blocks.
+
+### 17. Roadside structures take their height from the coarse sampler
+
+Item 5 moved the height of a roadside structure from the road to the ground under the structure, but that ground still comes from `getHeight`, which uses the terrain field or `TerrainSamplingCache.height` unless the structure sets `use_accurate_height`. None of the bundled structures does. The fast sampler reads the preliminary surface level, which can be four to eight blocks off on slopes and in cherry groves. In one world three of twelve roadside structures sat four to eight blocks below the ground around them, and `beard_box` dug a terraced pit around a bench to reach it.
+
+The height is now the median of the ground at the centre, the edge middles and the corners of the footprint, always from `ChunkGenerator.getBaseHeight`, and the terrain check rejects a footprint whose highest and lowest point differ by more than `MAX_STRUCTURE_SLOPE`. The old check compared the centre with the four edge middles only, so a diagonal slope passed. In a new world none of the roadside structures sat more than two blocks below the ground around it.
+
+## Checked on 1.21.1
+
+We applied the code fixes to `1.21.1-Architectury` (with the merged data fixes) and generated the same 256 chunks around spawn on a Fabric dedicated server, with the same seed, before and after.
+
+| Item | Unchanged 1.21.1 | With the fixes |
+|---|---|---|
+| 9. Road segments near spawn that are paved | 9 of 32 | 32 of 32, cabin built |
+| 11. Refmap error in the log | yes | no |
+| 13. Empty road signs | 2 of 4 | 0 of 6 |
+| 14. Neighbouring segments 3 or more blocks apart | 5 | 0 |
+| 15. Road segments on a sheet of dirt over air | 3 | 0 |
+
+Item 16 did not show up in that area in either run.
+
+The data fixes (items 1, 2, 3, 6 and 8) are merged. Items 4, 5, 7 and 9 to 11 were fixed and tested on our 26.3 port, on the `26.3-server` branch. Items 13 to 17 were tested on 26.2 and on 1.21.1 as above.
