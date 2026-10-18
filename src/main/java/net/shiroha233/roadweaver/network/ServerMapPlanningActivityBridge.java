@@ -1,13 +1,16 @@
-/* 文件职责：定义服务端向地图客户端同步自动规划采样范围的端口（服务端专用分支中为空实现）。 */
+/* 文件职责：定义服务端向地图客户端同步自动规划采样范围的端口。 */
 package net.shiroha233.roadweaver.network;
 
+import net.shiroha233.roadweaver.network.fabric.ServerMapPlanningActivityBridgeImpl;
 import net.minecraft.server.level.ServerLevel;
 
 /**
- * Planning activity sync to the map client. No map client in the server-side only fork, so this is a no-op.
+ * 自动规划采样活动的服务端地图同步端口。
  */
 public final class ServerMapPlanningActivityBridge {
     private ServerMapPlanningActivityBridge() {}
 
-    public static void broadcast(ServerLevel level) {}
+    public static void broadcast(ServerLevel level) {
+        ServerMapPlanningActivityBridgeImpl.broadcast(level);
+    }
 }

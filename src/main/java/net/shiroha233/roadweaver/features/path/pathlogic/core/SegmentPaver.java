@@ -17,6 +17,7 @@ import net.shiroha233.roadweaver.features.path.pathlogic.pathfinding.RoadHeightI
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 路面铺设器
@@ -34,6 +35,21 @@ public final class SegmentPaver {
             List<BlockState> slabMaterials,
             RandomSource random,
             ModConfig cfg) {
+        paveSegment(world, seg, segmentIndex, centers, targetY, roadType, materials, slabMaterials, random, cfg, Set.of());
+    }
+
+    /** As above, leaving the columns in {@code skipColumns} (stair steps of this or another road) untouched. */
+    public static void paveSegment(WorldGenLevel world,
+            RoadSegmentPlacement seg,
+            int segmentIndex,
+            List<BlockPos> centers,
+            int[] targetY,
+            int roadType,
+            List<BlockState> materials,
+            List<BlockState> slabMaterials,
+            RandomSource random,
+            ModConfig cfg,
+            Set<Long> skipColumns) {
         List<BlockPos> positions = seg.positions();
         if (positions.isEmpty())
             return;
@@ -43,6 +59,7 @@ public final class SegmentPaver {
 
         for (int i = 0; i < positions.size(); i++) {
             BlockPos widthBlock = positions.get(i);
+            if (skipColumns.contains(StairPaver.columnKey(widthBlock.getX(), widthBlock.getZ()))) continue;
             int y = heights[i];
             BlockPos pos = new BlockPos(widthBlock.getX(), y, widthBlock.getZ());
 
@@ -80,6 +97,10 @@ public final class SegmentPaver {
                     world.setBlock(pos, slabState, 3);
                 }
             }
+
+            if (!baseMats.isEmpty()) {
+                RoadSupports.support(world, pos.below(), RoadSlabs.isStoneRoad(baseMats));
+            }
         }
     }
 
@@ -103,9 +124,9 @@ public final class SegmentPaver {
                                                              Identifier biomeId) {
         PresetService.PresetDef preset = PresetService.findNaturalPresetForBiome(biomeId);
         if (preset != null) {
-            return new NaturalMaterials(
-                    PresetService.toBlockStatesFromIdsAllowEmpty(preset.materials()),
-                    PresetService.toBlockStatesFromIdsAllowEmpty(preset.slabMaterials()));
+            List<BlockState> base = PresetService.toBlockStatesFromIdsAllowEmpty(preset.materials());
+            return new NaturalMaterials(base,
+                    RoadSlabs.matching(base, PresetService.toBlockStatesFromIdsAllowEmpty(preset.slabMaterials())));
         }
         return new NaturalMaterials(
                 net.shiroha233.roadweaver.features.path.decoration.material.BiomeRoadMaterialSelector

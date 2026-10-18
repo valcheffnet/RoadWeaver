@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.shiroha233.roadweaver.mixin.client",
+  "compatibilityLevel": "JAVA_${java_version}",
+  "client": [
+    "CreateWorldScreenMixin",
+    "CreateWorldScreenInitMixin",
+    "LevelLoadingScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

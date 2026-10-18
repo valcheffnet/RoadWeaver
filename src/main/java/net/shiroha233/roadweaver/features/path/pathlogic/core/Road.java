@@ -6,6 +6,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
+import net.shiroha233.roadweaver.config.ConfigService;
 import net.shiroha233.roadweaver.config.PresetService;
 import net.shiroha233.roadweaver.config.sub.RoadGenerationConfig;
 import net.shiroha233.roadweaver.core.model.RoadData;
@@ -17,14 +18,18 @@ import net.shiroha233.roadweaver.features.path.config.PathFeatureConfig;
 import net.shiroha233.roadweaver.features.path.pathlogic.pathfinding.RoadPathCalculator;
 import net.shiroha233.roadweaver.features.path.pathlogic.pathfinding.RoadPathCalculator.PathCalculationResult;
 import net.shiroha233.roadweaver.pathfinding.PathSpanExtractor;
+import net.shiroha233.roadweaver.pathfinding.StairPlanner;
 import net.shiroha233.roadweaver.pathfinding.cache.TerrainSamplingCache;
 import net.shiroha233.roadweaver.pathfinding.terrain.PathTerrainField;
 import net.shiroha233.roadweaver.persistence.sharded.RoadShardStorage;
 import net.shiroha233.roadweaver.planning.PlanningUtils;
 import net.shiroha233.roadweaver.planning.path.PlannedPathCache;
 import net.shiroha233.roadweaver.planning.terrain.TerrainSamplingSessions;
+import net.shiroha233.roadweaver.postprocess.JunctionSlopeLimiter;
+import net.shiroha233.roadweaver.postprocess.RoadBumpFlattener;
 import net.shiroha233.roadweaver.structures.precompute.RoadsideStructurePrecomputer;
 import net.shiroha233.roadweaver.structures.precompute.RoadsideVillagePrecomputer;
+import net.shiroha233.roadweaver.structures.village.VillageStreetConnector;
 
 import java.util.*;
 
@@ -99,11 +104,13 @@ public final class Road {
             List<RoadSpan> spans = PathSpanExtractor.extractSpans(
                     segments, level, cache, terrain, genConfig.bridgeMinWaterDepth());
             List<Integer> targetY = computeTargetY(level, segments, spans, cache, genConfig);
+            targetY = refineHeights(segments, spans, targetY);
             long ownerA2d = PlanningUtils.pos2dKey(rawStart);
             long ownerB2d = PlanningUtils.pos2dKey(rawEnd);
 
             RoadData rd = new RoadData(width, type, materials, slabMaterials, segments, spans, targetY, ownerA2d, ownerB2d);
             RoadShardStorage.addRoad(level, rd);
+            VillageStreetConnector.onRoadAdded(rd);
             PlannedPathCache.discard(level, connection);
 
             RoadsideStructurePrecomputer.precomputeStructures(level, segments, spans, width, cache, terrain, random, targetY);
@@ -113,6 +120,64 @@ public final class Road {
             if (terrain != null) terrain.dispose();
             cache.clear();
         }
+    }
+
+    /** Humps and dips up to this many segments long are levelled out of a road. */
+    private static final int BUMP_MAX_SEGMENTS = 4;
+    private static final int BRIDGE_STAIR_GAP = 4;
+
+    /**
+     * Levels short humps and dips, then, where the ground climbs faster than the slope limit, adds a stair span that
+     * follows it in flights with landings, and re-applies the slope limit so the road meets the first and last step.
+     */
+    static List<Integer> refineHeights(List<RoadSegmentPlacement> segments, List<RoadSpan> spans, List<Integer> targetY) {
+        var cfg = ConfigService.get();
+        if (targetY == null || targetY.size() != segments.size()) return targetY;
+        int n = segments.size();
+        int[] ground = new int[n];
+        int[] heights = new int[n];
+        Map<Long, Integer> indexByMiddle = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            ground[i] = segments.get(i).middlePos().getY();
+            heights[i] = targetY.get(i);
+            indexByMiddle.putIfAbsent(segments.get(i).middlePos().asLong(), i);
+        }
+        boolean[] fixed = new boolean[n];
+        for (RoadSpan span : spans) {
+            if (span.type() != SpanType.BRIDGE) continue;
+            Integer a = indexByMiddle.get(span.start().asLong());
+            Integer b = indexByMiddle.get(span.end().asLong());
+            if (a == null || b == null) continue;
+            for (int i = Math.min(a, b); i <= Math.max(a, b); i++) fixed[i] = true;
+        }
+        RoadBumpFlattener.flatten(heights, fixed, BUMP_MAX_SEGMENTS);
+        // Stairs keep a few segments away from bridges: a bridge deck starts at its own height.
+        boolean[] noStairs = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            if (!fixed[i]) continue;
+            for (int j = Math.max(0, i - BRIDGE_STAIR_GAP); j <= Math.min(n - 1, i + BRIDGE_STAIR_GAP); j++) noStairs[j] = true;
+        }
+        List<StairPlanner.Stair> stairs = cfg.roadStairsEnabled()
+                ? StairPlanner.plan(ground, noStairs, StairPlanner.Settings.DEFAULT)
+                : List.of();
+        for (StairPlanner.Stair stair : stairs) {
+            for (int i = stair.start(); i <= stair.end(); i++) {
+                heights[i] = stair.height(i);
+                fixed[i] = true;
+            }
+            spans.add(new RoadSpan(segments.get(stair.start()).middlePos(), segments.get(stair.end()).middlePos(), SpanType.STAIRS));
+        }
+        if (cfg.slopeLimitEnabled()) JunctionSlopeLimiter.limit(heights, fixed, cfg.maxSlopeStepPerTwoSegments());
+        if (!stairs.isEmpty()) {
+            // Meet the road at both ends instead of overshooting it by a step.
+            for (StairPlanner.Stair stair : stairs) StairPlanner.fitToRoad(heights, stair.start(), stair.end(), BUMP_MAX_SEGMENTS);
+            if (cfg.slopeLimitEnabled()) JunctionSlopeLimiter.limit(heights, fixed, cfg.maxSlopeStepPerTwoSegments());
+        }
+        // The approaches to stairs can leave a one-block dip or hump next to the first or last step.
+        RoadBumpFlattener.flatten(heights, fixed, BUMP_MAX_SEGMENTS);
+        List<Integer> out = new ArrayList<>(n);
+        for (int h : heights) out.add(h);
+        return out;
     }
 
     private static int getRandomWidth(RandomSource rnd, PathFeatureConfig cfg) {

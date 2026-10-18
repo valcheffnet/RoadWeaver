@@ -11,6 +11,7 @@
     "fabric.BambooFeatureMixin",
     "fabric.GenericVegetationFeatureMixin",
     "fabric.ServerLevelStructureMixin",
+    "fabric.PlayerListPermissionMixin",
     "fabric.BeardifierMixin",
     "fabric.StructureManagerAccessor"
   ],

@@ -7,6 +7,7 @@ import net.minecraft.resources.Identifier;
 import net.shiroha233.roadweaver.RoadWeaver;
 import net.shiroha233.roadweaver.core.model.StructureConnection;
 import net.shiroha233.roadweaver.core.model.StructureLocationData;
+import net.shiroha233.roadweaver.map.permission.MapAccessPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,11 @@ public class WorldDataAttachment {
     public static final AttachmentType<List<StructureConnection>> CONNECTED_STRUCTURES = AttachmentRegistry.createPersistent(
             Identifier.fromNamespaceAndPath(RoadWeaver.MOD_ID, "connected_villages"),
             Codec.list(StructureConnection.CODEC)
+    );
+
+    public static final AttachmentType<MapAccessPolicy> MAP_ACCESS_POLICY = AttachmentRegistry.createPersistent(
+            Identifier.fromNamespaceAndPath(RoadWeaver.MOD_ID, "map_access_policy"),
+            MapAccessPolicy.CODEC
     );
 
     public static final AttachmentType<StructureLocationData> STRUCTURE_LOCATIONS = AttachmentRegistry.createPersistent(

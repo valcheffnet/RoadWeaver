@@ -34,49 +34,49 @@ final class SamplePresets {
         // ===== 自然道路（按生物群系划分）=====
         list.add(naturalPreset("plains", "Plains Trail",
                 List.of("minecraft:dirt_path", "minecraft:gravel", "minecraft:coarse_dirt"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("sunflower_plains", "Sunflower Plains Trail",
                 List.of("minecraft:dirt_path", "minecraft:gravel", "minecraft:coarse_dirt"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("meadow", "Meadow Trail",
                 List.of("minecraft:dirt_path", "minecraft:moss_block", "minecraft:coarse_dirt"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("forest", "Forest Trail",
                 List.of("minecraft:dirt_path", "minecraft:coarse_dirt", "minecraft:rooted_dirt"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("flower_forest", "Flower Forest Trail",
                 List.of("minecraft:dirt_path", "minecraft:coarse_dirt", "minecraft:moss_block"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("birch_forest", "Birch Forest Trail",
                 List.of("minecraft:dirt_path", "minecraft:coarse_dirt", "minecraft:gravel"),
-                List.of("minecraft:birch_slab")));
+                List.of("minecraft:mossy_cobblestone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("old_growth_birch_forest", "Old Growth Birch Trail",
                 List.of("minecraft:dirt_path", "minecraft:coarse_dirt", "minecraft:rooted_dirt"),
-                List.of("minecraft:birch_slab")));
+                List.of("minecraft:mossy_cobblestone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("dark_forest", "Dark Forest Trail",
                 List.of("minecraft:coarse_dirt", "minecraft:rooted_dirt", "minecraft:podzol"),
-                List.of("minecraft:dark_oak_slab")));
+                List.of("minecraft:mossy_cobblestone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("cherry_grove", "Cherry Grove Path",
                 List.of("minecraft:dirt_path", "minecraft:moss_block", "minecraft:coarse_dirt"),
-                List.of("minecraft:cherry_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("taiga", "Taiga Trail",
                 List.of("minecraft:coarse_dirt", "minecraft:podzol", "minecraft:gravel"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("old_growth_pine_taiga", "Old Growth Pine Trail",
                 List.of("minecraft:podzol", "minecraft:coarse_dirt", "minecraft:rooted_dirt"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("old_growth_spruce_taiga", "Old Growth Spruce Trail",
                 List.of("minecraft:podzol", "minecraft:coarse_dirt", "minecraft:rooted_dirt"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("snowy_taiga", "Snowy Taiga Trail",
                 List.of("minecraft:snow_block", "minecraft:coarse_dirt", "minecraft:gravel"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("snowy_plains", "Snowy Plains Trail",
                 List.of("minecraft:snow_block", "minecraft:packed_ice", "minecraft:gravel"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("ice_spikes", "Ice Spikes Trail",
                 List.of("minecraft:packed_ice", "minecraft:blue_ice", "minecraft:snow_block"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("snowy_slopes", "Snowy Slopes Trail",
                 List.of("minecraft:snow_block", "minecraft:powder_snow", "minecraft:stone"),
                 List.of("minecraft:stone_slab")));
@@ -85,7 +85,7 @@ final class SamplePresets {
                 List.of("minecraft:stone_slab")));
         list.add(naturalPreset("grove", "Grove Trail",
                 List.of("minecraft:snow_block", "minecraft:powder_snow", "minecraft:dirt_path"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("windswept_hills", "Windswept Hills Trail",
                 List.of("minecraft:stone", "minecraft:gravel", "minecraft:cobblestone"),
                 List.of("minecraft:stone_slab", "minecraft:cobblestone_slab")));
@@ -94,7 +94,7 @@ final class SamplePresets {
                 List.of("minecraft:stone_slab")));
         list.add(naturalPreset("windswept_forest", "Windswept Forest Trail",
                 List.of("minecraft:coarse_dirt", "minecraft:stone", "minecraft:gravel"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("stony_peaks", "Stony Peaks Trail",
                 List.of("minecraft:stone", "minecraft:calcite", "minecraft:andesite"),
                 List.of("minecraft:stone_slab", "minecraft:andesite_slab")));
@@ -112,49 +112,49 @@ final class SamplePresets {
                 List.of("minecraft:red_sandstone_slab")));
         list.add(naturalPreset("wooded_badlands", "Wooded Badlands Trail",
                 List.of("minecraft:coarse_dirt", "minecraft:terracotta", "minecraft:red_sand"),
-                List.of("minecraft:red_sandstone_slab", "minecraft:oak_slab")));
+                List.of("minecraft:red_sandstone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("jungle", "Jungle Trail",
                 List.of("minecraft:dirt_path", "minecraft:rooted_dirt", "minecraft:mud"),
-                List.of("minecraft:jungle_slab")));
+                List.of("minecraft:mossy_cobblestone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("sparse_jungle", "Sparse Jungle Trail",
                 List.of("minecraft:dirt_path", "minecraft:coarse_dirt", "minecraft:gravel"),
-                List.of("minecraft:jungle_slab")));
+                List.of("minecraft:mossy_cobblestone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("bamboo_jungle", "Bamboo Jungle Trail",
                 List.of("minecraft:dirt_path", "minecraft:podzol", "minecraft:rooted_dirt"),
-                List.of("minecraft:bamboo_slab", "minecraft:jungle_slab")));
+                List.of("minecraft:cobblestone_slab", "minecraft:mossy_cobblestone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("swamp", "Swamp Path",
                 List.of("minecraft:mud", "minecraft:muddy_mangrove_roots", "minecraft:dirt_path"),
-                List.of("minecraft:mud_brick_slab", "minecraft:oak_slab")));
+                List.of("minecraft:mud_brick_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("mangrove_swamp", "Mangrove Swamp Path",
                 List.of("minecraft:mud", "minecraft:muddy_mangrove_roots", "minecraft:mangrove_roots"),
-                List.of("minecraft:mud_brick_slab", "minecraft:mangrove_slab")));
+                List.of("minecraft:mud_brick_slab", "minecraft:mossy_cobblestone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("savanna", "Savanna Trail",
                 List.of("minecraft:dirt_path", "minecraft:coarse_dirt", "minecraft:gravel"),
-                List.of("minecraft:acacia_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("savanna_plateau", "Savanna Plateau Trail",
                 List.of("minecraft:dirt_path", "minecraft:coarse_dirt", "minecraft:stone"),
-                List.of("minecraft:acacia_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("windswept_savanna", "Windswept Savanna Trail",
                 List.of("minecraft:coarse_dirt", "minecraft:stone", "minecraft:gravel"),
-                List.of("minecraft:acacia_slab", "minecraft:stone_slab")));
+                List.of("minecraft:cobblestone_slab", "minecraft:stone_slab")));
         list.add(naturalPreset("beach", "Beach Path",
                 List.of("minecraft:sand", "minecraft:sandstone", "minecraft:gravel"),
                 List.of("minecraft:sandstone_slab")));
         list.add(naturalPreset("snowy_beach", "Snowy Beach Path",
                 List.of("minecraft:snow_block", "minecraft:sand", "minecraft:gravel"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("stony_shore", "Stony Shore Path",
                 List.of("minecraft:stone", "minecraft:cobblestone", "minecraft:gravel"),
                 List.of("minecraft:stone_slab", "minecraft:cobblestone_slab")));
         list.add(naturalPreset("river", "River Bank Path",
                 List.of("minecraft:dirt_path", "minecraft:gravel", "minecraft:sand"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("frozen_river", "Frozen River Path",
                 List.of("minecraft:packed_ice", "minecraft:gravel", "minecraft:snow_block"),
-                List.of("minecraft:spruce_slab")));
+                List.of("minecraft:cobblestone_slab")));
         list.add(naturalPreset("mushroom_fields", "Mushroom Fields Path",
                 List.of("minecraft:mycelium", "minecraft:dirt_path", "minecraft:coarse_dirt"),
-                List.of("minecraft:oak_slab")));
+                List.of("minecraft:cobblestone_slab")));
 
         SAMPLE_PRESETS = List.copyOf(list);
     }

@@ -21,6 +21,7 @@ import java.io.BufferedWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -95,7 +96,16 @@ public final class StructureDiscoveryService {
             } catch (Exception ignored) {
                 overworldBiomes = Set.of();
             }
+            discoverFromStructures(structureRegistry, overworldBiomes);
+        } catch (Exception e) {
+            LOGGER.error("结构发现失败", e);
+        }
+    }
 
+    /** Collects the structures that can generate in the given overworld biomes, and their tags. */
+    public static void discoverFromStructures(Registry<Structure> structureRegistry, Set<Holder<Biome>> overworldBiomes) {
+        if (structureRegistry == null || overworldBiomes == null) return;
+        try {
             Map<Identifier, StructureEntry> structureMap = new LinkedHashMap<>();
             for (var entry : structureRegistry.entrySet()) {
                 Identifier id = entry.getKey().identifier();
@@ -127,6 +137,8 @@ public final class StructureDiscoveryService {
             LOGGER.warn("无法发现结构: registryAccess 为 null");
             return;
         }
+        // A client-side world has no dimension registry; the cached result from the server or world creation is used then.
+        if (registryAccess.lookup(Registries.LEVEL_STEM).isEmpty()) return;
         try {
             Registry<Structure> structureRegistry = registryAccess.lookupOrThrow(Registries.STRUCTURE);
             Registry<LevelStem> levelStemRegistry = registryAccess.lookupOrThrow(Registries.LEVEL_STEM);
@@ -147,8 +159,21 @@ public final class StructureDiscoveryService {
         return cachedResult;
     }
 
+    /** Registry of the world the client has loaded; set by the client entrypoint, empty on a dedicated server. */
+    private static volatile Supplier<RegistryAccess> clientRegistryAccess = () -> null;
+
+    public static void setClientRegistryAccess(Supplier<RegistryAccess> supplier) {
+        clientRegistryAccess = supplier;
+    }
+
     public static void tryDiscoverFromCurrentContext() {
-        // Server-side only: the client registry (world creation screen) never exists here.
+        try {
+            RegistryAccess access = clientRegistryAccess.get();
+            if (access != null) {
+                discoverFromRegistryAccess(access);
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     public static boolean hasResult() { return getResult() != null; }

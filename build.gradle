@@ -3,18 +3,58 @@ plugins {
 }
 
 base {
-	archivesName = 'roadweaver-server'
+	archivesName = 'roadweaver'
+}
+
+repositories {
+	maven { url = 'https://maven.shedaniel.me/' }
+	maven { url = 'https://maven.terraformersmc.com/releases/' }
 }
 
 loom {
-	// Server-side only: compile against the server jar so any client class reference fails the build.
-	serverOnlyMinecraftJar()
+	// Client code lives in src/client; main must never reference it, so dedicated servers and vanilla clients keep working.
+	splitEnvironmentSourceSets()
+
+	mods {
+		roadweaver {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+	runs {
+		// Own folder so a dev client and the dev server in run/ can run side by side
+		client {
+			runDir = "run-client"
+		}
+		signTest {
+			server()
+			runDir = "run-sign"
+		}
+	}
+}
+
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "roadweaver-test"
+		enableGameTests = false
+		enableClientGameTests = true
+		eula = true
+	}
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
+	// Config screen (client only at runtime, bundled so players need no extra download)
+	implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
+		exclude group: "net.fabricmc.fabric-api"
+	}
+	include "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
+	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -26,7 +66,7 @@ def templateProps = [
 	java_version     : project.java_version,
 ]
 
-processResources {
+tasks.withType(ProcessResources).configureEach {
 	inputs.properties templateProps
 	filesMatching(["fabric.mod.json", "*.mixins.json"]) {
 		expand templateProps
@@ -44,6 +84,14 @@ tasks.withType(Test).configureEach {
 	useJUnitPlatform()
 	// StructureTemplateUpgradeTool only runs when asked: -Droadweaver.upgradeTemplates=true
 	systemProperty 'roadweaver.upgradeTemplates', System.getProperty('roadweaver.upgradeTemplates', 'false')
+}
+
+sourceSets {
+	// Map and UI tests exercise client classes
+	test {
+		compileClasspath += sourceSets.client.output + sourceSets.client.compileClasspath
+		runtimeClasspath += sourceSets.client.output + sourceSets.client.runtimeClasspath
+	}
 }
 
 java {

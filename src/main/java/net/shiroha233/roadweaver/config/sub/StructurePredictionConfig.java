@@ -18,6 +18,8 @@ public final class StructurePredictionConfig implements SubConfig {
     private List<String> structureBlacklist = new ArrayList<>();
     private int villageRoadOffset = RoadConstants.DEFAULT_VILLAGE_ROAD_OFFSET;
     private int otherStructureRoadOffset = RoadConstants.DEFAULT_OTHER_STRUCTURE_ROAD_OFFSET;
+    /** Pave a short road from where a road stops before a village to the nearest village street. */
+    private boolean connectVillageStreets = true;
 
     @Override
     public void sanitize() {
@@ -39,6 +41,7 @@ public final class StructurePredictionConfig implements SubConfig {
         copy.structureBlacklist = new ArrayList<>(this.structureBlacklist);
         copy.villageRoadOffset = this.villageRoadOffset;
         copy.otherStructureRoadOffset = this.otherStructureRoadOffset;
+        copy.connectVillageStreets = this.connectVillageStreets;
         return copy;
     }
 
@@ -60,4 +63,6 @@ public final class StructurePredictionConfig implements SubConfig {
     public void setVillageRoadOffset(int v) { this.villageRoadOffset = v; }
     public int otherStructureRoadOffset() { return otherStructureRoadOffset; }
     public void setOtherStructureRoadOffset(int v) { this.otherStructureRoadOffset = v; }
+    public boolean connectVillageStreets() { return connectVillageStreets; }
+    public void setConnectVillageStreets(boolean v) { this.connectVillageStreets = v; }
 }

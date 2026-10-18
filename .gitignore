@@ -4,6 +4,8 @@ out/
 bin/
 classes/
 run/
+run-client/
+run-sign/
 logs/
 *.log
 

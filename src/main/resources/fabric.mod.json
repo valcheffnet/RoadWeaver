@@ -2,14 +2,14 @@
 	"schemaVersion": 1,
 	"id": "roadweaver",
 	"version": "${version}",
-	"name": "RoadWeaver (server-side)",
-	"description": "Generates roads between villages and other structures. Server-side only fork of RoadWeaver: vanilla clients can join without the mod.",
+	"name": "RoadWeaver",
+	"description": "Generates roads between villages and other structures. 26.2 port of RoadWeaver 2.3.2: install it on the client for the road map and settings screens; vanilla clients can still join a server that runs it.",
 	"authors": [
 		"shiroha233"
 	],
 	"contributors": [
 		"Countered (settlement-roads-new, CC0-1.0)",
-		"SasnycoN (26.2 server-side port)"
+		"SasnycoN (26.2 port)"
 	],
 	"contact": {
 		"homepage": "https://github.com/shiroha-233/RoadWeaver",
@@ -17,14 +17,24 @@
 	},
 	"license": "MIT",
 	"icon": "assets/roadweaver/icon.png",
-	"environment": "server",
+	"environment": "*",
 	"entrypoints": {
 		"main": [
 			"net.shiroha233.roadweaver.RoadWeaver"
+		],
+		"client": [
+			"net.shiroha233.roadweaver.client.fabric.ClientInit"
+		],
+		"modmenu": [
+			"net.shiroha233.roadweaver.client.fabric.ModMenuIntegration"
 		]
 	},
 	"mixins": [
-		"roadweaver.mixins.json"
+		"roadweaver.mixins.json",
+		{
+			"config": "roadweaver.client.mixins.json",
+			"environment": "client"
+		}
 	],
 	"depends": {
 		"fabricloader": ">=0.19.0",
