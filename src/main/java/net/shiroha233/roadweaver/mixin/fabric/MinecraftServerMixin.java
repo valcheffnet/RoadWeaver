@@ -21,7 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * MinecraftServer Mixin
  * New worlds: vanilla fully generates the spawn chunks inside setInitialSpawn (spawn search), which runs before
  * prepareLevels. The initial road network is therefore planned at the start of setInitialSpawn, around the predicted
- * spawn, and the spawn cabin is built once setInitialSpawn has finished. Existing worlds keep the prepareLevels path.
+ * spawn, and the spawn cabin is built once setInitialSpawn has finished. Existing worlds keep the prepareLevels path
+ * and get no cabin: the area around their spawn has long been explored and may be built on.
  */
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin {
@@ -61,8 +62,6 @@ public abstract class MinecraftServerMixin {
         if (InitialGenManager.shouldRunInitialGeneration(level)) {
             InitialGenManager.begin(level);
             InitialGenManager.blockUntilDone(level);
-            // Existing world: the spawn chunks were generated long ago, so build the cabin directly.
-            SpawnCabinPlacer.placePlannedCabin(level, level.getRespawnData().pos());
         } else {
             RoadGenerationService.onServerStarted();
         }
