@@ -54,6 +54,8 @@ These are bugs of the original that are fixed here. The ones marked "upstream" a
 | Side roads fell several blocks per segment where they merged into a main road | yes |
 | Roads over a deep dip or along a cliff edge sat on a thin sheet of dirt in the air | yes |
 | Sign posts and lamps stood on grass and flowers, a block above the ground | yes |
+| Roadside structures four to eight blocks below the ground, in a dug pit, because their height came from the coarse terrain sampler | yes |
+| The spawn cabin set into a slope with a pit around it | yes |
 | Signs showed translation keys to players without the mod | no, upstream needs the mod on the client |
 | Every bridge block turned into air (template palette format) | 26.x only |
 | Map textures were released on the network thread when leaving a server | 1.21.6 and later |
@@ -85,7 +87,7 @@ A stretch of up to 4 segments that lies one or two blocks above or below the roa
 
 ### Decks over deep dips
 
-Gaps of one or two blocks under the road are filled like an embankment. Over a deeper gap the road becomes a deck of planks in the biome's wood, or stone bricks on a stone road, with posts down to the ground every 3 blocks: fences where the deck is up to 4 blocks high, stone brick pillars where it is higher.
+This only applies where the gap opens to the side, over a dip or past a cliff edge. A road over a cave keeps its ground. Gaps of one or two blocks under the road are filled like an embankment. Over a deeper gap the road becomes a deck of planks in the biome's wood, or stone bricks on a stone road, with posts down to the ground every 3 blocks: fences where the deck is up to 4 blocks high, stone brick pillars where it is higher.
 
 ### Slabs that match the road
 
@@ -109,5 +111,7 @@ Map packets are only sent to players whose client registered the channel, and no
 
 - Where a road makes a hairpin turn on a steep slope, the two legs can run side by side several blocks apart in height, with no wall between them (seen at -790 99 -370 on our test seed).
 - A stair on a stretch that two roads share takes the style of the road that owns the stair, so a cobblestone stair can appear in the middle of a stone brick road.
+- Where two stair spans of a road meet, the last step of one and the first of the next can be three blocks apart.
+- A distance sign placed on a column that a stair in a neighbouring chunk later paves loses its post and hangs in the air without text.
 - The first road generation on a new world holds up server start, as it does upstream.
 - `PathPostProcessorBoundsTest.staircaseSearchNodesProduceWidelySpacedCurveControls` fails on unchanged upstream code.
