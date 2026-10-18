@@ -46,7 +46,7 @@ public final class BridgeTemplateStructureRegistry {
             this.structure = structure;
 
             if (level != null) {
-                StructureTemplate template = level.getStructureTemplateManager().get(structure.templateId).orElse(null);
+                StructureTemplate template = level.getStructureManager().get(structure.templateId).orElse(null);
                 if (template == null) {
                     return;
                 }

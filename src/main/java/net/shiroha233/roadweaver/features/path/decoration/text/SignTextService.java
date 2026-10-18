@@ -10,7 +10,6 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
-import net.minecraft.world.level.block.entity.SignTextSlot;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.shiroha233.roadweaver.persistence.files.SignTextFileStorage;
 import net.shiroha233.roadweaver.persistence.sharded.SignTextShardStorage;
@@ -109,19 +108,19 @@ public final class SignTextService {
         BlockEntity be = chunk.getBlockEntity(pos);
         if (!(be instanceof HangingSignBlockEntity sign)) return false;
 
-        SignText front = sign.getText(SignTextSlot.FRONT);
-        front = front.asMutable().setLine(0, Component.translatableWithFallback("gui.roadweaver.sign.next_location", "Next Location")).asImmutable();
-        front = front.asMutable().setLine(1, Component.literal(text + " m")).asImmutable();
-        front = front.asMutable().setLine(2, Component.literal("")).asImmutable();
-        front = front.asMutable().setLine(3, Component.literal("")).asImmutable();
-        sign.setText(front, SignTextSlot.FRONT);
+        SignText front = sign.getFrontText();
+        front = front.setMessage(0, Component.translatableWithFallback("gui.roadweaver.sign.next_location", "Next Location"));
+        front = front.setMessage(1, Component.literal(text + " m"));
+        front = front.setMessage(2, Component.literal(""));
+        front = front.setMessage(3, Component.literal(""));
+        sign.setText(front, true);
 
-        SignText back = sign.getText(SignTextSlot.BACK);
-        back = back.asMutable().setLine(0, Component.literal("----------")).asImmutable();
-        back = back.asMutable().setLine(1, Component.translatableWithFallback("gui.roadweaver.sign.welcome", "Welcome")).asImmutable();
-        back = back.asMutable().setLine(2, Component.translatableWithFallback("gui.roadweaver.sign.traveller", "Traveler")).asImmutable();
-        back = back.asMutable().setLine(3, Component.literal("----------")).asImmutable();
-        sign.setText(back, SignTextSlot.BACK);
+        SignText back = sign.getBackText();
+        back = back.setMessage(0, Component.literal("----------"));
+        back = back.setMessage(1, Component.translatableWithFallback("gui.roadweaver.sign.welcome", "Welcome"));
+        back = back.setMessage(2, Component.translatableWithFallback("gui.roadweaver.sign.traveller", "Traveler"));
+        back = back.setMessage(3, Component.literal("----------"));
+        sign.setText(back, false);
 
         sign.setChanged();
         return true;
@@ -145,19 +144,19 @@ public final class SignTextService {
         BlockEntity be = chunk.getBlockEntity(pos);
         if (!(be instanceof HangingSignBlockEntity sign)) return false;
 
-        SignText front = sign.getText(SignTextSlot.FRONT);
-        front = front.asMutable().setLine(0, Component.translatableWithFallback("gui.roadweaver.sign.sea_question.line1", "What's beyond")).asImmutable();
-        front = front.asMutable().setLine(1, Component.translatableWithFallback("gui.roadweaver.sign.sea_question.line2", "the sea?")).asImmutable();
-        front = front.asMutable().setLine(2, Component.literal("")).asImmutable();
-        front = front.asMutable().setLine(3, Component.literal("")).asImmutable();
-        sign.setText(front, SignTextSlot.FRONT);
+        SignText front = sign.getFrontText();
+        front = front.setMessage(0, Component.translatableWithFallback("gui.roadweaver.sign.sea_question.line1", "What's beyond"));
+        front = front.setMessage(1, Component.translatableWithFallback("gui.roadweaver.sign.sea_question.line2", "the sea?"));
+        front = front.setMessage(2, Component.literal(""));
+        front = front.setMessage(3, Component.literal(""));
+        sign.setText(front, true);
 
-        SignText back = sign.getText(SignTextSlot.BACK);
-        back = back.asMutable().setLine(0, Component.literal("")).asImmutable();
-        back = back.asMutable().setLine(1, Component.literal("")).asImmutable();
-        back = back.asMutable().setLine(2, Component.literal("")).asImmutable();
-        back = back.asMutable().setLine(3, Component.literal("")).asImmutable();
-        sign.setText(back, SignTextSlot.BACK);
+        SignText back = sign.getBackText();
+        back = back.setMessage(0, Component.literal(""));
+        back = back.setMessage(1, Component.literal(""));
+        back = back.setMessage(2, Component.literal(""));
+        back = back.setMessage(3, Component.literal(""));
+        sign.setText(back, false);
 
         sign.setChanged();
         return true;

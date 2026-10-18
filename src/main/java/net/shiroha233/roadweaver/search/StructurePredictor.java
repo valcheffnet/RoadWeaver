@@ -11,7 +11,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeSource;
-import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.structure.Structure;
@@ -77,7 +76,6 @@ public final class StructurePredictor {
         ChunkGeneratorStructureState state = level.getChunkSource().getGeneratorState();
         RandomState randomState = state.randomState();
         BiomeSource biomeSource = level.getChunkSource().getGenerator().getBiomeSource();
-        BiomeResolver biomeResolver = biomeSource.createUncachedResolver(randomState);
 
         Set<Holder<Biome>> allowedBiomes = null;
         if (biomePrefilter) {
@@ -116,7 +114,7 @@ public final class StructurePredictor {
                     int qx = QuartPos.fromBlock(locatePos.getX());
                     int qy = QuartPos.fromBlock(64);
                     int qz = QuartPos.fromBlock(locatePos.getZ());
-                    Holder<Biome> sample = biomeResolver.getNoiseBiome(qx, qy, qz);
+                    Holder<Biome> sample = biomeSource.getNoiseBiome(qx, qy, qz, randomState.sampler());
                     if (!allowedBiomes.contains(sample))
                         continue;
                 }
@@ -141,7 +139,6 @@ public final class StructurePredictor {
         ChunkGeneratorStructureState state = level.getChunkSource().getGeneratorState();
         RandomState randomState = state.randomState();
         BiomeSource biomeSource = level.getChunkSource().getGenerator().getBiomeSource();
-        BiomeResolver biomeResolver = biomeSource.createUncachedResolver(randomState);
 
         Filters filters = Filters.of(whitelist, blacklist);
 
@@ -240,7 +237,7 @@ public final class StructurePredictor {
                     int qx = QuartPos.fromBlock(locatePos.getX());
                     int qy = QuartPos.fromBlock(64);
                     int qz = QuartPos.fromBlock(locatePos.getZ());
-                    Holder<Biome> sample = biomeResolver.getNoiseBiome(qx, qy, qz);
+                    Holder<Biome> sample = biomeSource.getNoiseBiome(qx, qy, qz, randomState.sampler());
                     if (biomePrefilter && allowedBiomes != null) {
                         if (!allowedBiomes.contains(sample))
                             continue;
@@ -282,7 +279,6 @@ public final class StructurePredictor {
         ChunkGeneratorStructureState state = level.getChunkSource().getGeneratorState();
         RandomState randomState = state.randomState();
         BiomeSource biomeSource = level.getChunkSource().getGenerator().getBiomeSource();
-        BiomeResolver biomeResolver = biomeSource.createUncachedResolver(randomState);
 
         Filters filters = Filters.of(whitelist, blacklist);
 
@@ -359,7 +355,7 @@ public final class StructurePredictor {
                     int qx = QuartPos.fromBlock(locatePos.getX());
                     int qy = QuartPos.fromBlock(64);
                     int qz = QuartPos.fromBlock(locatePos.getZ());
-                    Holder<Biome> sample = biomeResolver.getNoiseBiome(qx, qy, qz);
+                    Holder<Biome> sample = biomeSource.getNoiseBiome(qx, qy, qz, randomState.sampler());
                     if (biomePrefilter && allowedBiomes != null) {
                         if (!allowedBiomes.contains(sample))
                             continue;

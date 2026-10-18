@@ -26,6 +26,7 @@
 			"entries": [
 				{
 					"type": "minecraft:tag",
+					"name": "roadweaver:dyes",
 					"expand": true,
 					"functions": [
 						{
@@ -36,8 +37,7 @@
 								"max": 4
 							}
 						}
-					],
-					"items": "#roadweaver:dyes"
+					]
 				}
 			]
 		},
@@ -51,33 +51,33 @@
 			"entries": [
 				{
 					"type": "minecraft:tag",
+					"name": "minecraft:terracotta",
 					"expand": true,
-					"quality": 0.2,
-					"items": "#minecraft:terracotta"
+					"quality": 0.2
 				},
 				{
 					"type": "minecraft:tag",
+					"name": "roadweaver:glazed_terracotta",
 					"expand": true,
-					"quality": 0.2,
-					"items": "#roadweaver:glazed_terracotta"
+					"quality": 0.2
 				},
 				{
 					"type": "minecraft:tag",
+					"name": "roadweaver:stained_glass",
 					"expand": true,
-					"weight": 2,
-					"items": "#roadweaver:stained_glass"
+					"weight": 2
 				},
 				{
 					"type": "minecraft:tag",
+					"name": "minecraft:wool",
 					"expand": true,
-					"weight": 3,
-					"items": "#minecraft:wool"
+					"weight": 3
 				},
 				{
 					"type": "minecraft:tag",
+					"name": "minecraft:wool_carpets",
 					"expand": true,
-					"weight": 2,
-					"items": "#minecraft:wool_carpets"
+					"weight": 2
 				},
 				{
 					"type": "minecraft:item",

@@ -26,7 +26,7 @@ class NoiseChunkHeightSamplerTest {
     static void bootstrapMinecraft() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
-        registries = VanillaRegistries.createWorldLookup();
+        registries = VanillaRegistries.createLookup();
     }
 
     @Test
@@ -35,9 +35,9 @@ class NoiseChunkHeightSamplerTest {
                 .getOrThrow(NoiseGeneratorSettings.OVERWORLD)
                 .value();
         RandomState randomState = RandomState.create(
+                settings,
                 registries.lookupOrThrow(Registries.NOISE),
-                0x5EED_1234_ABCDL,
-                settings);
+                0x5EED_1234_ABCDL);
         LevelHeightAccessor heightAccessor = LevelHeightAccessor.create(
                 settings.noiseSettings().minY(),
                 settings.noiseSettings().height());
@@ -63,9 +63,9 @@ class NoiseChunkHeightSamplerTest {
                 .getOrThrow(NoiseGeneratorSettings.OVERWORLD);
         NoiseGeneratorSettings settings = settingsHolder.value();
         RandomState randomState = RandomState.create(
+                settings,
                 registries.lookupOrThrow(Registries.NOISE),
-                0x5EED_1234_ABCDL,
-                settings);
+                0x5EED_1234_ABCDL);
         LevelHeightAccessor heightAccessor = LevelHeightAccessor.create(
                 settings.noiseSettings().minY(),
                 settings.noiseSettings().height());

@@ -47,7 +47,7 @@ public final class StructureInjector {
         
         Registry<Structure> structureRegistry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
         StructureManager structureManager = level.structureManager();
-        StructureTemplateManager templateManager = level.getStructureTemplateManager();
+        StructureTemplateManager templateManager = level.getStructureManager();
         
         int injectedCount = 0;
         
@@ -90,7 +90,7 @@ public final class StructureInjector {
                     new PiecesContainer(List.of(piece))
                 );
                 
-                structureManager.setStartForStructure(structure, start, chunk);
+                structureManager.setStartForStructure(SectionPos.of(chunkPos, 0), structure, start, chunk);
                 injectedCount++;
                 
             } catch (Exception e) {
@@ -116,7 +116,7 @@ public final class StructureInjector {
 
         Registry<Structure> structureRegistry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
         StructureManager structureManager = level.structureManager();
-        StructureTemplateManager templateManager = level.getStructureTemplateManager();
+        StructureTemplateManager templateManager = level.getStructureManager();
         int injectedCount = 0;
 
         for (PendingRoadsideVillage village : villages) {
@@ -139,7 +139,7 @@ public final class StructureInjector {
                     0,
                     new PiecesContainer(new ArrayList<>(pieces))
                 );
-                structureManager.setStartForStructure(structure, start, chunk);
+                structureManager.setStartForStructure(SectionPos.of(chunkPos, 0), structure, start, chunk);
                 injectedCount++;
             } catch (Exception e) {
                 LOGGER.error("Failed to inject roadside village {}", village.placementId(), e);

@@ -1,12 +1,12 @@
-# RoadWeaver for Minecraft 26.3, server-side only
+# RoadWeaver for Minecraft 26.2, server-side only
 
-This fork runs RoadWeaver 2.3.2 on a Fabric 26.3 dedicated server. Players join with an unmodded 26.3 client. Roads, bridges, tunnels, lamps, signs and roadside structures are all built by the server during world generation, so nothing has to be installed on the client.
+This fork runs RoadWeaver 2.3.2 on a Fabric 26.2 dedicated server. Players join with an unmodded 26.2 client. Roads, bridges, tunnels, lamps, signs and roadside structures are all built by the server during world generation, so nothing has to be installed on the client.
 
-Upstream is [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver) (MIT). The port lives on the `26.3-server` branch.
+Upstream is [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver) (MIT). This is the `26.2-server` branch, a backport of the `26.3-server` branch. It keeps all fixes from 26.3; the worldgen code uses the 26.2 API (configured features, density functions), the same one upstream uses on 1.21.x.
 
 ## Install
 
-1. Put `roadweaver-server-<version>.jar` in the server's `mods/` folder next to Fabric API for 26.3.
+1. Put `roadweaver-server-<version>.jar` in the server's `mods/` folder next to Fabric API for 26.2.
 2. Start the server once. It writes the default config to `config/roadweaver/`.
 3. Edit the config if needed, then restart or run `/roadweaver reload`.
 
@@ -27,7 +27,7 @@ Everything that needs the mod on the client is gone. In detail:
 | F9 raw path debug overlay | Showed unprocessed path nodes | None. |
 | OpenCL (GPU) terrain sampler and the bundled LWJGL | Faster terrain sampling on a GPU | The CPU sampler, which was already the fallback |
 | NeoForge build, Architectury, Cloth Config dependency | Second loader and the shared platform layer | Fabric only |
-| Compat mixins for Oh The Trees You'll Grow, ReTerraForged, Dynamic Trees | Kept roads clear of those mods' trees | None. Those mods have no 26.3 builds. |
+| Compat mixins for Oh The Trees You'll Grow, ReTerraForged, Dynamic Trees | Kept roads clear of those mods' trees | None. The compat code was not ported. |
 
 The map's tile data (`data/roadweaver/map/` in the world) is still written, because road planning reads it. Nothing displays it.
 

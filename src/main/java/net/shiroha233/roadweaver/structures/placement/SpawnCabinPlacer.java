@@ -54,7 +54,7 @@ public final class SpawnCabinPlacer {
     public static BlockPos predictSpawn(ServerLevel level) {
         ChunkGenerator generator = level.getChunkSource().getGenerator();
         RandomState randomState = level.getChunkSource().randomState();
-        ChunkPos origin = generator.getOrigin(randomState);
+        ChunkPos origin = ChunkPos.containing(randomState.sampler().findSpawnPosition());
         int x = origin.getMinBlockX() + 8;
         int z = origin.getMinBlockZ() + 8;
         int y = generator.getBaseHeight(x, z, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, level, randomState);
@@ -100,14 +100,14 @@ public final class SpawnCabinPlacer {
         BlockPos anchor = PLANNED_ANCHOR.getAndSet(null);
         if (level == null || anchor == null) return;
         if (!(spawnCabin(level) instanceof SpawnCabinStructure cabin)) return;
-        Vec3i size = level.getStructureTemplateManager().get(cabin.templateId())
+        Vec3i size = level.getStructureManager().get(cabin.templateId())
                 .map(t -> t.getSize()).orElse(cabin.sizeHint());
         BlockPos pos = findFreeSpot(level, anchor, size);
         if (pos == null) {
             LOGGER.warn("No free spot for the spawn cabin within {} blocks of {}, skipping it", SEARCH_RADIUS, anchor);
             return;
         }
-        StructureStart start = cabin.placeAt(level, level.structureManager(), level.getStructureTemplateManager(),
+        StructureStart start = cabin.placeAt(level, level.structureManager(), level.getStructureManager(),
                 level.getChunkSource().getGenerator(), pos, Rotation.NONE, level.getRandom());
         if (start == null) {
             LOGGER.warn("Spawn cabin could not be placed at {}", pos);

@@ -1,8 +1,12 @@
 package net.shiroha233.roadweaver.features.path.config;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.world.level.levelgen.feature.configurations.FeatureConfiguration;
 
 /**
  * 普通道路 Feature 配置
  */
-public class PathFeatureConfig {
+public class PathFeatureConfig implements FeatureConfiguration {
+    public static final Codec<PathFeatureConfig> CODEC = MapCodec.unitCodec(new PathFeatureConfig());
 }

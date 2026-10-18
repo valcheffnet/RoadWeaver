@@ -23,7 +23,7 @@ class WorldgenFingerprintServiceTest {
     static void bootstrapMinecraft() {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
-        registries = VanillaRegistries.createWorldLookup();
+        registries = VanillaRegistries.createLookup();
         dataVersion = SharedConstants.getCurrentVersion().dataVersion().version();
     }
 

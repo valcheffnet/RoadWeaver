@@ -2,11 +2,13 @@
 package net.shiroha233.roadweaver.pathfinding.cache;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.levelgen.Aquifer;
-import net.minecraft.world.level.levelgen.Beardifier;
+import net.minecraft.world.level.levelgen.DensityFunction;
+import net.minecraft.world.level.levelgen.DensityFunctions;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.NoiseChunk;
@@ -14,29 +16,21 @@ import net.minecraft.world.level.levelgen.NoiseGeneratorSettings;
 import net.minecraft.world.level.levelgen.NoiseSettings;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
-import net.minecraft.world.level.levelgen.densityfunction.DensityFunction;
-import net.minecraft.world.level.levelgen.densityfunction.DensityVolume;
-import net.minecraft.world.level.levelgen.densityfunction.ScopedDensityBuffer;
 
 import java.util.Arrays;
 import java.util.function.Predicate;
 
 /**
  * 基于原版 NoiseChunk 批量烘焙整块高度图的精确采样器
- * 26.x: density is sampled in volumes (NoiseChunk.cachingSamplers + Aquifer.computeSubstance), the same way
- * NoiseBasedChunkGenerator.doFill/iterateNoiseColumn do it. The chunk is sampled top-down in slabs so the
- * work stops once every requested column has found its surface.
  */
 final class NoiseChunkHeightSampler {
-    /** Slab height for top-down sampling; a multiple of the vanilla cell height (8) so interpolation matches. */
-    private static final int SLAB_HEIGHT = 32;
+    private static final ZeroBeardifier ZERO_BEARDIFIER = ZeroBeardifier.INSTANCE;
 
     private final RandomState randomState;
     private final NoiseGeneratorSettings generatorSettings;
     private final NoiseSettings noiseSettings;
     private final Aquifer.FluidPicker fluidPicker;
     private final BlockState defaultBlock;
-    private final DensityFunction finalDensity;
     private NoiseChunkHeightSampler(RandomState randomState,
                                     NoiseGeneratorSettings generatorSettings,
                                     NoiseSettings noiseSettings,
@@ -46,7 +40,6 @@ final class NoiseChunkHeightSampler {
         this.noiseSettings = noiseSettings;
         this.fluidPicker = fluidPicker;
         this.defaultBlock = generatorSettings.defaultBlock();
-        this.finalDensity = generatorSettings.noiseRouter().finalDensity();
     }
 
     static NoiseChunkHeightSampler create(ServerLevel level, NoiseBasedChunkGenerator generator, RandomState randomState) {
@@ -81,8 +74,15 @@ final class NoiseChunkHeightSampler {
         Arrays.fill(oceanFloor, minY);
         Arrays.fill(motionBlocking, minY);
 
+        int cellWidth = noiseSettings.getCellWidth();
+        int cellHeight = noiseSettings.getCellHeight();
+        int cellCountXZ = 16 / cellWidth;
+        int cellCountY = Mth.floorDiv(noiseSettings.height(), cellHeight);
+        int cellNoiseMinY = Mth.floorDiv(minY, cellHeight);
         byte[] unresolvedMasks = new byte[256];
-        int unresolvedColumns = initializeRequestedColumns(requestedColumns, unresolvedMasks);
+        boolean[] requestedCells = new boolean[cellCountXZ * cellCountXZ];
+        int unresolvedColumns = initializeRequestedColumns(
+                requestedColumns, unresolvedMasks, requestedCells, cellWidth, cellCountXZ);
         if (unresolvedColumns == 0) {
             return new AccurateHeightChunk(chunkX, chunkZ, worldSurface, oceanFloor, motionBlocking);
         }
@@ -94,64 +94,101 @@ final class NoiseChunkHeightSampler {
         int minBlockX = chunkX << 4;
         int minBlockZ = chunkZ << 4;
 
-        int topY = minY + noiseSettings.height();
-        for (int slabTop = topY; slabTop > minY && unresolvedColumns > 0; slabTop -= SLAB_HEIGHT) {
-            int slabBottom = Math.max(minY, slabTop - SLAB_HEIGHT);
-            DensityVolume volume = new DensityVolume(16, slabTop - slabBottom, 16, minBlockX, slabBottom, minBlockZ);
-            try (NoiseChunk noiseChunk = new NoiseChunk(
-                    randomState, Beardifier.EMPTY, generatorSettings, fluidPicker, Blender.empty(), volume);
-                 ScopedDensityBuffer densities = noiseChunk.cachingSamplers().get(finalDensity).sampleVolume(volume)) {
-                Aquifer aquifer = noiseChunk.aquifer();
-                for (int iy = volume.sizeY() - 1; iy >= 0 && unresolvedColumns > 0; iy--) {
-                    int blockY = volume.blockY(iy);
-                    for (int iz = 0; iz < 16 && unresolvedColumns > 0; iz++) {
-                        for (int ix = 0; ix < 16; ix++) {
-                            int index = ix | (iz << 4);
-                            byte mask = unresolvedMasks[index];
-                            if (mask == 0) {
-                                continue;
-                            }
-                            double density = densities.get(volume.indexUnchecked(ix, iy, iz));
-                            BlockState state = aquifer.computeSubstance(volume.blockX(ix), blockY, volume.blockZ(iz), density);
-                            if (state == null) {
-                                state = defaultBlock;
-                            }
-                            if (state.isAir()) {
-                                continue;
-                            }
+        AccessibleNoiseChunk noiseChunk = new AccessibleNoiseChunk(
+                cellCountXZ,
+                randomState,
+                minBlockX,
+                minBlockZ,
+                noiseSettings,
+                ZERO_BEARDIFIER,
+                generatorSettings,
+                fluidPicker);
 
-                            byte nextMask = mask;
-                            if ((nextMask & 0x01) != 0 && worldSurfacePredicate.test(state)) {
-                                worldSurface[index] = blockY + 1;
-                                nextMask &= ~0x01;
-                            }
-                            if ((nextMask & 0x02) != 0 && oceanFloorPredicate.test(state)) {
-                                oceanFloor[index] = blockY + 1;
-                                nextMask &= ~0x02;
-                            }
-                            if ((nextMask & 0x04) != 0 && motionPredicate.test(state)) {
-                                motionBlocking[index] = blockY + 1;
-                                nextMask &= ~0x04;
-                            }
+        noiseChunk.initializeForFirstCellX();
+        try {
+            outer:
+            for (int cellX = 0; cellX < cellCountXZ; cellX++) {
+                noiseChunk.advanceCellX(cellX);
 
-                            if (nextMask != mask) {
-                                unresolvedMasks[index] = nextMask;
-                                if (nextMask == 0) {
-                                    unresolvedColumns--;
+                for (int cellZ = 0; cellZ < cellCountXZ; cellZ++) {
+                    if (!requestedCells[cellX * cellCountXZ + cellZ]) {
+                        continue;
+                    }
+                    for (int cellY = cellCountY - 1; cellY >= 0; cellY--) {
+                        noiseChunk.selectCellYZ(cellY, cellZ);
+
+                        for (int inCellY = cellHeight - 1; inCellY >= 0; inCellY--) {
+                            int blockY = (cellNoiseMinY + cellY) * cellHeight + inCellY;
+                            noiseChunk.updateForY(blockY, (double) inCellY / cellHeight);
+
+                            for (int inCellX = 0; inCellX < cellWidth; inCellX++) {
+                                int blockX = minBlockX + cellX * cellWidth + inCellX;
+                                int localX = blockX & 15;
+                                noiseChunk.updateForX(blockX, (double) inCellX / cellWidth);
+
+                                for (int inCellZ = 0; inCellZ < cellWidth; inCellZ++) {
+                                    int blockZ = minBlockZ + cellZ * cellWidth + inCellZ;
+                                    int index = localX + ((blockZ & 15) << 4);
+                                    byte mask = unresolvedMasks[index];
+                                    if (mask == 0) {
+                                        continue;
+                                    }
+                                    noiseChunk.updateForZ(blockZ, (double) inCellZ / cellWidth);
+
+                                    BlockState state = noiseChunk.sampleInterpolatedState();
+                                    if (state == null) {
+                                        state = defaultBlock;
+                                    }
+                                    if (state.isAir()) {
+                                        continue;
+                                    }
+
+                                    byte nextMask = mask;
+                                    if ((nextMask & 0x01) != 0 && worldSurfacePredicate.test(state)) {
+                                        worldSurface[index] = blockY + 1;
+                                        nextMask &= ~0x01;
+                                    }
+                                    if ((nextMask & 0x02) != 0 && oceanFloorPredicate.test(state)) {
+                                        oceanFloor[index] = blockY + 1;
+                                        nextMask &= ~0x02;
+                                    }
+                                    if ((nextMask & 0x04) != 0 && motionPredicate.test(state)) {
+                                        motionBlocking[index] = blockY + 1;
+                                        nextMask &= ~0x04;
+                                    }
+
+                                    if (nextMask != mask) {
+                                        unresolvedMasks[index] = nextMask;
+                                        if (nextMask == 0) {
+                                            unresolvedColumns--;
+                                            if (unresolvedColumns == 0) {
+                                                break outer;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                noiseChunk.swapSlices();
             }
+        } finally {
+            noiseChunk.stopInterpolation();
         }
 
         return new AccurateHeightChunk(chunkX, chunkZ, worldSurface, oceanFloor, motionBlocking);
     }
 
-    private static int initializeRequestedColumns(int[] requestedColumns, byte[] unresolvedMasks) {
+    private static int initializeRequestedColumns(int[] requestedColumns,
+                                                  byte[] unresolvedMasks,
+                                                  boolean[] requestedCells,
+                                                  int cellWidth,
+                                                  int cellCountXZ) {
         if (requestedColumns == null) {
             Arrays.fill(unresolvedMasks, (byte) 0x07);
+            Arrays.fill(requestedCells, true);
             return unresolvedMasks.length;
         }
 
@@ -164,6 +201,9 @@ final class NoiseChunkHeightSampler {
                 continue;
             }
             unresolvedMasks[column] = 0x07;
+            int localX = column & 15;
+            int localZ = column >> 4;
+            requestedCells[(localX / cellWidth) * cellCountXZ + localZ / cellWidth] = true;
             count++;
         }
         return count;
@@ -176,4 +216,44 @@ final class NoiseChunkHeightSampler {
         return (x, y, z) -> y < Math.min(-54, seaLevel) ? lava : defaultFluid;
     }
 
+    private static final class AccessibleNoiseChunk extends NoiseChunk {
+        private AccessibleNoiseChunk(int cellCountXZ,
+                                     RandomState randomState,
+                                     int minBlockX,
+                                     int minBlockZ,
+                                     NoiseSettings noiseSettings,
+                                     DensityFunctions.BeardifierOrMarker beardifier,
+                                     NoiseGeneratorSettings generatorSettings,
+                                     Aquifer.FluidPicker fluidPicker) {
+            super(cellCountXZ, randomState, minBlockX, minBlockZ, noiseSettings, beardifier, generatorSettings, fluidPicker, Blender.empty());
+        }
+
+        private BlockState sampleInterpolatedState() {
+            return this.getInterpolatedState();
+        }
+    }
+
+    private enum ZeroBeardifier implements DensityFunctions.BeardifierOrMarker {
+        INSTANCE;
+
+        @Override
+        public double compute(DensityFunction.FunctionContext context) {
+            return 0.0D;
+        }
+
+        @Override
+        public void fillArray(double[] values, DensityFunction.ContextProvider contextProvider) {
+            Arrays.fill(values, 0.0D);
+        }
+
+        @Override
+        public double minValue() {
+            return 0.0D;
+        }
+
+        @Override
+        public double maxValue() {
+            return 0.0D;
+        }
+    }
 }

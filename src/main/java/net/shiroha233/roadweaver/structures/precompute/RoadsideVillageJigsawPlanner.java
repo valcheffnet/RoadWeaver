@@ -128,12 +128,12 @@ public final class RoadsideVillageJigsawPlanner {
             Rotation rotation = rotations[i % rotations.length];
             List<StructureTemplate.JigsawBlockInfo> jigsaws = safeJigsawBlocks(templateManager, element, rotation, random);
             for (StructureTemplate.JigsawBlockInfo jigsaw : jigsaws) {
-                Direction front = JigsawBlock.getFrontFacing(jigsaw.state());
+                Direction front = JigsawBlock.getFrontFacing(jigsaw.info().state());
                 if (front != slot.outward().getOpposite()) {
                     continue;
                 }
 
-                BlockPos position = slot.anchor().subtract(jigsaw.pos());
+                BlockPos position = slot.anchor().subtract(jigsaw.info().pos());
                 Optional<BoundingBox> maybeBox = safeBoundingBox(templateManager, element, position, rotation);
                 if (maybeBox.isEmpty()) {
                     continue;
@@ -150,7 +150,7 @@ public final class RoadsideVillageJigsawPlanner {
                     templateManager,
                     element,
                     position,
-                    jigsaw.pos().getY(),
+                    jigsaw.info().pos().getY(),
                     rotation,
                     box,
                     JigsawStructure.DEFAULT_LIQUID_SETTINGS
@@ -170,8 +170,8 @@ public final class RoadsideVillageJigsawPlanner {
             // Vanilla houses with a front step have it at y 0, the others at door level. Templates without an
             // entrance jigsaw keep their bottom layer at the anchor.
             int baseOffset = safeJigsawBlocks(templateManager, element, rotation, random).stream()
-                .filter(jigsaw -> JigsawBlock.getFrontFacing(jigsaw.state()).getAxis().isHorizontal())
-                .mapToInt(jigsaw -> jigsaw.pos().getY())
+                .filter(jigsaw -> JigsawBlock.getFrontFacing(jigsaw.info().state()).getAxis().isHorizontal())
+                .mapToInt(jigsaw -> jigsaw.info().pos().getY())
                 .min()
                 .orElse(zeroBox.minY());
             BlockPos position = new BlockPos(

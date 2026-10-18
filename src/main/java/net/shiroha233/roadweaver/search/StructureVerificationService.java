@@ -66,7 +66,7 @@ public final class StructureVerificationService {
         StructureCheck checker = new StructureCheck(
                 scanAccess,
                 registryAccess,
-                server.getStructureTemplateManager(),
+                server.getStructureManager(),
                 level.dimension(),
                 generator,
                 randomState,

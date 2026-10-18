@@ -145,7 +145,7 @@ public final class StructureAvoidanceService {
                             CHUNK_BBOX_CACHE.remove(key);
                             return;
                         }
-                        StructureStart start = sm.getStartForStructure(structure, chunk);
+                        StructureStart start = sm.getStartForStructure(SectionPos.of(cp, 0), structure, chunk);
                         if (start == null || !start.isValid()) continue;
                         for (StructurePiece piece : start.getPieces()) {
                             BoundingBox bb = piece.getBoundingBox();
