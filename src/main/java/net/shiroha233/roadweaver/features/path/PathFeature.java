@@ -84,6 +84,7 @@ public class PathFeature extends Feature<PathFeatureConfig> {
         }
         StairPaver.placeSteps(world, stairColumns.paved(), stairColumns.stairs(), stairColumns.roadColumns());
 
+        dropDecorationsOnRoads(server, currentChunk, decorations, stairColumns, cfg);
         DecorationExecutor.tryPlaceDecorations(decorations);
         return true;
     }
@@ -169,13 +170,10 @@ public class PathFeature extends Feature<PathFeatureConfig> {
         
         for (int localIndex = 0; localIndex < slice.segmentCount(); localIndex++) {
             int i = slice.segmentIndexAt(localIndex);
-            if (!connector && (i < 2 || i >= segments.size() - 2)) {
+            if (!pavedSegment(connector, i, segments.size()))
                 continue;
-            }
             BlockPos middle = middlePositions.get(i);
             int segmentIndex = i - 1;
-            if (!connector && (segmentIndex < 8 || segmentIndex > segments.size() - 8))
-                continue;
             if (!contains(currentChunk, middle))
                 continue;
             boolean stairHere = stairSign != null && stairSign[i] != 0 && baseYArr != null;
@@ -275,14 +273,41 @@ public class PathFeature extends Feature<PathFeatureConfig> {
         }
     }
 
+    /** Ordinary roads leave their first and last few segments unpaved; a village connector is paved end to end. */
+    private static boolean pavedSegment(boolean connector, int i, int count) {
+        return connector || (i >= 9 && i <= count - 7);
+    }
+
+    /**
+     * Paving a road column clears the blocks above it. A lamp or sign post standing on a column that a road (or a
+     * stair) from a neighbouring chunk paves later loses its middle and leaves the lantern or hanging sign in the air,
+     * so posts keep off every paved road column, including those of the chunk next door.
+     */
+    private static void dropDecorationsOnRoads(ServerLevel server, ChunkPos currentChunk, Set<Decoration> decorations,
+            StairColumns here, ModConfig cfg) {
+        Map<Long, Set<Long>> surfaceByChunk = new HashMap<>();
+        surfaceByChunk.put(currentChunk.pack(), here.surface());
+        decorations.removeIf(decoration -> {
+            BlockPos pos = decoration.getPos();
+            ChunkPos chunk = ChunkPos.containing(pos);
+            Set<Long> surface = surfaceByChunk.computeIfAbsent(chunk.pack(), key -> {
+                StairColumns columns = new StairColumns();
+                RoadChunkPlan plan = RoadWorldgenPlanCache.get(server, chunk, cfg);
+                for (RoadChunkSlice slice : plan.slices()) columns.collect(slice);
+                return columns.surface();
+            });
+            return surface.contains(StairPaver.columnKey(pos.getX(), pos.getZ()));
+        });
+    }
+
     private static int[] stairSigns(RoadData data, List<BlockPos> middles, int[] heights) {
         if (data.spans() == null || heights == null) return null;
         int[] signs = null;
-        java.util.Map<Long, Integer> indexByMiddle = null;
+        Map<Long, Integer> indexByMiddle = null;
         for (var span : data.spans()) {
             if (span.type() != SpanType.STAIRS) continue;
             if (indexByMiddle == null) {
-                indexByMiddle = new java.util.HashMap<>();
+                indexByMiddle = new HashMap<>();
                 for (int i = 0; i < middles.size(); i++) indexByMiddle.putIfAbsent(middles.get(i).asLong(), i);
                 signs = new int[middles.size()];
             }
@@ -302,6 +327,7 @@ public class PathFeature extends Feature<PathFeatureConfig> {
     private static final class StairColumns {
         private final Set<Long> stairs = new HashSet<>();
         private final Set<Long> roads = new HashSet<>();
+        private final Set<Long> surface = new HashSet<>();
         private final Map<Long, StairPaver.Column> paved = new HashMap<>();
         private final Set<BlockPos> stairMiddles = new HashSet<>();
         private final Set<RoadData> withStairs = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -313,7 +339,12 @@ public class PathFeature extends Feature<PathFeatureConfig> {
             for (int k = 0; k < slice.segmentCount(); k++) {
                 int i = slice.segmentIndexAt(k);
                 if (i < 0 || i >= segments.size()) continue;
-                for (BlockPos p : segments.get(i).positions()) roads.add(StairPaver.columnKey(p.getX(), p.getZ()));
+                boolean surfaced = pavedSegment(data.villageConnector(), i, segments.size());
+                for (BlockPos p : segments.get(i).positions()) {
+                    long key = StairPaver.columnKey(p.getX(), p.getZ());
+                    roads.add(key);
+                    if (surfaced) surface.add(key);
+                }
             }
             if (data.spans() == null || data.spans().stream().noneMatch(s -> s.type() == SpanType.STAIRS)) return;
             Map<Long, Integer> indexByMiddle = new HashMap<>();
@@ -349,6 +380,11 @@ public class PathFeature extends Feature<PathFeatureConfig> {
 
         Set<Long> roadColumns() {
             return roads;
+        }
+
+        /** Road columns that get paved, without the unpaved ends of ordinary roads. */
+        Set<Long> surface() {
+            return surface;
         }
 
         Map<Long, StairPaver.Column> paved() {

@@ -78,6 +78,8 @@ A few details that took several rounds of testing:
 - Every column of a stair is paved once and in one material, so landings and the gaps between steps are not left as dirt, gravel or slabs. Other roads that cross or share the stretch leave those columns alone.
 - Steps are placed after the whole chunk is paved, from the blocks that are actually there. Any column that is exactly one block below its neighbour gets a step, so nowhere on the stairs needs a jump.
 - Stairs keep at least 4 segments away from bridges.
+- Two stairs that meet end to end, in a valley or on a ridge, are joined so the steps never jump by more than one block. A climb that goes on right after a stair continues that stair with a landing instead of starting a second one, and a stair never overlaps another.
+- Lamps and sign posts are never placed on a road column. A road or stair paved later from the neighbouring chunk clears the air above its columns and used to cut the post, leaving the hanging sign in the air.
 
 Config: `roadAppearance.roadStairsEnabled`, default `true`.
 
@@ -128,7 +130,5 @@ All payload channels are registered as optional, so a vanilla client can join, a
 
 - Where a road makes a hairpin turn on a steep slope, the two legs can run side by side several blocks apart in height, with no wall between them (seen at -790 99 -370 on our test seed).
 - A stair on a stretch that two roads share takes the style of the road that owns the stair, so a cobblestone stair can appear in the middle of a stone brick road.
-- Where two stair spans of a road meet, the last step of one and the first of the next can be three blocks apart.
-- A distance sign placed on a column that a stair in a neighbouring chunk later paves loses its post and hangs in the air without text.
 - The first road generation on a new world holds up server start, as it does upstream.
 - `PathPostProcessorBoundsTest.staircaseSearchNodesProduceWidelySpacedCurveControls` fails on unchanged upstream code.

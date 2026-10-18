@@ -169,8 +169,8 @@ public final class Road {
         }
         if (cfg.slopeLimitEnabled()) JunctionSlopeLimiter.limit(heights, fixed, cfg.maxSlopeStepPerTwoSegments());
         if (!stairs.isEmpty()) {
-            // Meet the road at both ends instead of overshooting it by a step.
-            for (StairPlanner.Stair stair : stairs) StairPlanner.fitToRoad(heights, stair.start(), stair.end(), BUMP_MAX_SEGMENTS);
+            // Meet the road at both ends instead of overshooting it by a step, and each other where two stairs touch.
+            StairPlanner.fitToRoad(heights, stairs, BUMP_MAX_SEGMENTS);
             if (cfg.slopeLimitEnabled()) JunctionSlopeLimiter.limit(heights, fixed, cfg.maxSlopeStepPerTwoSegments());
         }
         // The approaches to stairs can leave a one-block dip or hump next to the first or last step.
