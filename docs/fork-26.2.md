@@ -1,6 +1,6 @@
 # RoadWeaver for Minecraft 26.2, full version
 
-This is our fork of RoadWeaver 2.3.2 for Fabric 26.2, branch `26.2-full`, version `2.3.2-full.1+26.2`. It has the features the original has on 1.21.1: roads, bridges, tunnels, signs, lamps and roadside structures on the server, plus the road map, the settings screens and the overlays on the client. The client part is optional. A player with an unmodded 26.2 client can join a server that runs it and sees all the roads; only the map and the screens are missing for that player.
+This is our fork of RoadWeaver 2.3.2 for Fabric 26.2, branch `26.2-fabric`, version `2.3.2-full.1+26.2`. The NeoForge build of the same fork is on `26.2-neoforge`; the two share everything except the loader code. It has the features the original has on 1.21.1: roads, bridges, tunnels, signs, lamps and roadside structures on the server, plus the road map, the settings screens and the overlays on the client. The client part is optional. A player with an unmodded 26.2 client can join a server that runs it and sees all the roads; only the map and the screens are missing for that player.
 
 Upstream is [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver) (MIT). The fork started as a server-side port to 26.3 (branch `26.3-server`), was backported to 26.2 (branch `26.2-server`) and then got the client side back on this branch. Bugs we found in the original 1.21.x code are written up separately in `upstream-report.md`.
 
