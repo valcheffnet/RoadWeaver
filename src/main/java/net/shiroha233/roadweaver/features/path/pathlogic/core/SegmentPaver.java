@@ -5,7 +5,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.shiroha233.roadweaver.config.ModConfig;
@@ -23,6 +26,9 @@ import java.util.Set;
  * 路面铺设器
  */
 public final class SegmentPaver {
+    /** Blocks above the road surface searched for a sign or lamp post. */
+    private static final int POST_SEARCH = 3;
+
     private SegmentPaver() {}
 
     public static void paveSegment(WorldGenLevel world,
@@ -35,10 +41,16 @@ public final class SegmentPaver {
             List<BlockState> slabMaterials,
             RandomSource random,
             ModConfig cfg) {
-        paveSegment(world, seg, segmentIndex, centers, targetY, roadType, materials, slabMaterials, random, cfg, Set.of());
+        paveSegment(world, seg, segmentIndex, centers, targetY, roadType, materials, slabMaterials, random, cfg, Set.of(),
+                false);
     }
 
-    /** As above, leaving the columns in {@code skipColumns} (stair steps of this or another road) untouched. */
+    /**
+     * As above, leaving the columns in {@code skipColumns} (stair steps of this or another road) untouched. With
+     * {@code keepPosts}, a column that already holds a fence or wall post (a sign or lamp of the road this one leads on
+     * from) is left as it is too: a village connector is paved after that road, and clearing the column would cut the
+     * post and leave the sign or lantern in the air.
+     */
     public static void paveSegment(WorldGenLevel world,
             RoadSegmentPlacement seg,
             int segmentIndex,
@@ -49,7 +61,8 @@ public final class SegmentPaver {
             List<BlockState> slabMaterials,
             RandomSource random,
             ModConfig cfg,
-            Set<Long> skipColumns) {
+            Set<Long> skipColumns,
+            boolean keepPosts) {
         List<BlockPos> positions = seg.positions();
         if (positions.isEmpty())
             return;
@@ -64,6 +77,9 @@ public final class SegmentPaver {
             BlockPos pos = new BlockPos(widthBlock.getX(), y, widthBlock.getZ());
 
             if (StructureAvoidanceService.shouldAvoid(world, pos)) {
+                continue;
+            }
+            if (keepPosts && holdsPost(world, pos)) {
                 continue;
             }
 
@@ -102,6 +118,14 @@ public final class SegmentPaver {
                 RoadSupports.support(world, pos.below(), RoadSlabs.isStoneRoad(baseMats));
             }
         }
+    }
+
+    private static boolean holdsPost(WorldGenLevel world, BlockPos pos) {
+        for (int up = 0; up < POST_SEARCH; up++) {
+            Block block = world.getBlockState(pos.above(up)).getBlock();
+            if (block instanceof FenceBlock || block instanceof WallBlock) return true;
+        }
+        return false;
     }
 
     private static boolean shouldPlaceSlab(int x, int z, int currentY,

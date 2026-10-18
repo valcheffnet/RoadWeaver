@@ -241,7 +241,7 @@ public class PathFeature extends Feature<PathFeatureConfig> {
                 }
             } else {
                 SegmentPaver.paveSegment(world, seg, i, middlePositions, baseYArr, roadType, materials, slabMaterials,
-                        random, cfg, stairColumns.stairs());
+                        random, cfg, stairColumns.stairs(), connector);
 
                 if (!connector && cfg.roadAppearance().roadSignsEnabled()) {
                     SkippedBridgeBankSignPlanner.addIfSkippedBridgeBank(
