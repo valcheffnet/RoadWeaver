@@ -1,15 +1,15 @@
 # RoadWeaver for Minecraft 26.2, full version
 
-This is our fork of RoadWeaver 2.3.2 for Fabric 26.2, branch `26.2-full`, version `2.3.2-full.1+26.2`. It has the features the original has on 1.21.1: roads, bridges, tunnels, signs, lamps and roadside structures on the server, plus the road map, the settings screens and the overlays on the client. The client part is optional. A player with an unmodded 26.2 client can join a server that runs it and sees all the roads; only the map and the screens are missing for that player.
+This is our fork of RoadWeaver 2.3.2 for NeoForge 26.2, branch `26.2-neoforge`, version `2.3.2-full.1+26.2`. The Fabric build of the same fork is on `26.2-full`; the two share everything except the loader code. It has the features the original has on 1.21.1: roads, bridges, tunnels, signs, lamps and roadside structures on the server, plus the road map, the settings screens and the overlays on the client. The client part is optional. A player with an unmodded 26.2 client can join a server that runs it and sees all the roads; only the map and the screens are missing for that player.
 
-Upstream is [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver) (MIT). The fork started as a server-side port to 26.3 (branch `26.3-server`), was backported to 26.2 (branch `26.2-server`, commit `43b510b`) and then got the client side back on this branch. Bugs we found in the original 1.21.x code are written up separately in `upstream-report.md`.
+Upstream is [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver) (MIT). The fork started as a server-side port to 26.3 (branch `26.3-server`), was backported to 26.2 (branch `26.2-server`), got the client side back on `26.2-full` and was then moved to NeoForge on this branch. Bugs we found in the original 1.21.x code are written up separately in `upstream-report.md`.
 
 ## Install
 
 | Where | What |
 |---|---|
-| Server | `roadweaver-2.3.2-full.1+26.2.jar` and Fabric API for 26.2 in `mods/`. |
-| Client, optional | The same jar and Fabric API. Gives the road map, the settings screens and the overlays. ModMenu is optional and adds a config button. |
+| Server | `roadweaver-neoforge-2.3.2-full.1+26.2.jar` in `mods/` of a NeoForge 26.2 server (26.2.0.93 or later). |
+| Client, optional | The same jar. Gives the road map, the settings screens and the overlays. The settings open from the Config button in the mod list. |
 | Single player | The same jar on the client. |
 
 Cloth Config (26.2.155) is bundled in the jar, so it does not need to be installed separately.
@@ -29,7 +29,7 @@ On a new world the first road network is planned before the server opens, which 
 
 | Removed | Why |
 |---|---|
-| NeoForge build and Architectury | Fabric only. The Architectury `@ExpectPlatform` calls were replaced with direct calls. |
+| Architectury | Each loader has its own branch. The `@ExpectPlatform` calls were replaced with direct calls. |
 | OpenCL terrain sampler and the bundled LWJGL OpenCL | The CPU sampler was already the fallback. The OpenCL options are gone from the config screen; the keys in `roadweaver.json` are ignored. |
 | Compat mixins for Oh The Trees You'll Grow, ReTerraForged and Dynamic Trees | Not ported. |
 | `BiomeGrassColorFailSafeMixin` | Its target changed in 26.2 and the client works without it. |
@@ -96,6 +96,23 @@ Natural roads choose their half-step slabs from their surface: mud brick slabs o
 ### Works with and without the client mod
 
 Map packets are only sent to players whose client registered the channel, and nothing in the login phase needs the mod. The map access policy is stored per world.
+
+## Moving to NeoForge
+
+| Fabric | NeoForge |
+|---|---|
+| `ServerLifecycleEvents`, `ServerTickEvents`, `ServerChunkEvents`, `ServerLevelEvents` | `ServerStartedEvent`, `ServerStoppingEvent`, `ServerTickEvent.Post`, `ChunkEvent.Load`, `LevelEvent.Unload` |
+| `PayloadTypeRegistry` and `ServerPlayNetworking` | `RegisterPayloadHandlersEvent` with an optional registrar, `PacketDistributor`, `hasChannel` instead of `canSend` |
+| `ClientPlayNetworking` | `RegisterClientPayloadHandlersEvent` and `ClientPacketDistributor` |
+| `Registry.register` on built-in registries at init | `RegisterEvent` (the registries are frozen by then) |
+| `BiomeModifications.addFeature` | `data/roadweaver/neoforge/biome_modifier/road_feature.json` |
+| Fabric attachments on the level | A NeoForge attachment type for the map access policy; the other world data already lives in RoadWeaver's own files |
+| `KeyMappingHelper`, `ClientTickEvents`, `ClientPlayConnectionEvents` | `RegisterKeyMappingsEvent`, `ClientTickEvent.Post`, `ClientPlayerNetworkEvent` |
+| `LevelRenderEvents.AFTER_TRANSLUCENT_FEATURES` | `SubmitCustomGeometryEvent` |
+| ModMenu entry | `IConfigScreenFactory` extension point |
+| `FabricLoader` (config folder, loaded mods, mod icons) | `FMLPaths`, `ModList`, `LoadingModList` in the mixin plugin |
+
+All payload channels are registered as optional, so a vanilla client can join, and the mod declares `displayTest = "IGNORE_ALL_VERSION"`. A dedicated server with this build and a vanilla 26.2 client were tested together; the generated roads, signs and structures match the Fabric build for the same seed.
 
 ## Porting the client code to 26.2
 
