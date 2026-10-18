@@ -127,8 +127,8 @@ public class SimpleTemplatePiece extends TemplateStructurePiece {
 
     /**
      * Fills the air under the bottom layer of the placed template down to the ground, column by column, so a
-     * structure on a slope does not hang in the air. Upstream relied on beard terrain adaptation, which "beard_thin"
-     * structures and the directly built spawn cabin do not get. Only writes inside {@code box}.
+     * structure on a slope does not hang in the air. Beard terrain adaptation does not reach under "beard_thin"
+     * structures or the directly built spawn cabin. Only writes inside {@code box}.
      */
     private void placeFoundation(WorldGenLevel level, BoundingBox box) {
         BoundingBox bb = this.getBoundingBox();

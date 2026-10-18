@@ -33,10 +33,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 初始小屋放置器。
- * Server-side 26.3 fork: vanilla generates the spawn chunks while it searches a spawn point, before structures can be
- * injected into them, so the cabin is no longer queued as a pending structure. ensurePlaced() only registers the
- * anchor as a road endpoint (without loading chunks); placePlannedCabin() builds the cabin into the world once the
- * spawn chunks exist.
+ * Vanilla generates the spawn chunks while it searches a spawn point, before structures can be injected into them, so
+ * the cabin is not queued as a pending structure: ensurePlaced() only registers the anchor as a road endpoint (without
+ * loading chunks), and placePlannedCabin() builds the cabin into the world once the spawn chunks exist.
  */
 public final class SpawnCabinPlacer {
     private static final Logger LOGGER = LoggerFactory.getLogger("roadweaver");

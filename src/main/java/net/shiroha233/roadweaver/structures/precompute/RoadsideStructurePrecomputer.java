@@ -154,10 +154,9 @@ public final class RoadsideStructurePrecomputer {
             // blocks off on slopes and in cherry groves, and a structure set that low ends up in a pit.
             boolean useBaseHeight = true;
 
-            // Ground under the structure itself. Upstream used the road's target height of this segment, but the
-            // structure sits beside the road and on a slope the ground there can be several blocks lower or higher.
-            // The median over the footprint, so one low or high corner on a slope neither buries nor lifts the whole
-            // structure.
+            // The ground under the structure itself, not the road's height: beside a road on a slope it can be several
+            // blocks lower or higher. The median over the footprint, so one low or high corner neither buries nor lifts
+            // the whole structure.
             int[] ground = footprintHeights(placeX, placeZ, sizeHint, level, cache, terrain, heightmap, useBaseHeight);
             int baseHeight = ground[ground.length / 2];
 

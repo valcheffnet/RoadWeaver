@@ -1,5 +1,7 @@
 package net.shiroha233.roadweaver.client.loading.neoforge;
 
+import net.shiroha233.roadweaver.client.neoforge.ClientInit;
+
 /**
  * 平台侧“打开地图”按键文案实现。
  */
@@ -8,8 +10,8 @@ public final class OpenMapKeyTextBridgeImpl {
     }
 
     public static String getDisplayText() {
-        return net.shiroha233.roadweaver.client.neoforge.ClientInit.OPEN_MAP == null
+        return ClientInit.OPEN_MAP == null
                 ? "H"
-                : net.shiroha233.roadweaver.client.neoforge.ClientInit.OPEN_MAP.getTranslatedKeyMessage().getString();
+                : ClientInit.OPEN_MAP.getTranslatedKeyMessage().getString();
     }
 }
