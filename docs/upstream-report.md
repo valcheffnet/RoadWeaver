@@ -145,6 +145,18 @@ Item 5 moved the height of a roadside structure from the road to the ground unde
 
 The height is now the median of the ground at the centre, the edge middles and the corners of the footprint, always from `ChunkGenerator.getBaseHeight`, and the terrain check rejects a footprint whose highest and lowest point differ by more than `MAX_STRUCTURE_SLOPE`. The old check compared the centre with the four edge middles only, so a diagonal slope passed. In a new world none of the roadside structures sat more than two blocks below the ground around it.
 
+## Found while testing the 26.3 server build again
+
+### 18. Sign text queued on disk is not written while many chunks wait
+
+This is in the file storage path of `1.21.1-Architectury`. `1.21.11-Architectury` reads pending sign text from SQLite inside `processChunk` and is not affected.
+
+Text that could not be written from memory, or that was flushed to disk on shutdown, comes back through `SignTextFileIo.poll`. On a cache miss `poll` returns `null`, a background thread reads the chunk's file into `CACHE` and marks the chunk dirty again, and the text is written when the chunk comes up next. `CACHE` is an LRU of 32 chunks, though, and `SignTextService.tick` handles 8 dirty chunks per tick. When more than 32 loaded chunks are dirty at once, and one forceloaded area or one player's view distance is enough for that, every load is evicted by the loads of the chunks queued behind it before its own chunk comes up again. The poll misses, starts another load, and the chunk goes to the back of the queue. On a restarted test world 75 chunks went round like this: 2348 polls in about a minute, not one cache hit, eight file reads every tick, and the two signs whose text was on disk stayed empty. The loop goes on until enough of those chunks unload.
+
+This also defeats part of item 13. Marking chunks again from `CHUNK_LOAD` is meant to pick up text that was flushed to disk before a restart, and this is the step where it gets stuck.
+
+A finished load now waits outside the LRU until its chunk polls it (`SignTextChunkCache`), and only then joins the 32 most recent chunks, so it cannot be evicted before it is read. `SignTextFileIo.upsert` also marks the chunk dirty again once the row is on disk, because the chunk may have polled the old cached copy in the meantime and dropped its mark. On the restarted world both signs had their text within ten seconds of starting, and the queue files were empty.
+
 ## Checked on 1.21.1
 
 We applied the code fixes to `1.21.1-Architectury` (with the merged data fixes) and generated the same 256 chunks around spawn on a Fabric dedicated server, with the same seed, before and after.
@@ -159,4 +171,4 @@ We applied the code fixes to `1.21.1-Architectury` (with the merged data fixes) 
 
 Item 16 did not show up in that area in either run.
 
-The data fixes (items 1, 2, 3, 6 and 8) are merged. Items 4, 5, 7 and 9 to 11 were fixed and tested on our 26.3 port, on the `26.3-server` branch. Items 13 to 17 were tested on 26.2 and on 1.21.1 as above.
+The data fixes (items 1, 2, 3, 6 and 8) are merged. Items 4, 5, 7 and 9 to 11 were fixed and tested on our 26.3 port, on the `26.3-server` branch. Items 13 to 17 were tested on 26.2 and on 1.21.1 as above. Item 18 was tested on the 26.3 build, and the same change is on both 26.2 branches.
