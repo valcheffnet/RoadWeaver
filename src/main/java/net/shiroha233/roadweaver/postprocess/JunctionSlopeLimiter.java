@@ -1,6 +1,8 @@
 /* Re-applies the road slope limit to a road whose segments were partly replaced by another road's. */
 package net.shiroha233.roadweaver.postprocess;
 
+import java.util.Arrays;
+
 /**
  * When a side road merges into a main road, the merged segments take the main road's heights, which can be far from
  * the side road's own heights a few segments away. This spreads that difference along the side road so that no two
@@ -24,8 +26,8 @@ public final class JunctionSlopeLimiter {
 
         int[] low = new int[n];
         int[] high = new int[n];
-        java.util.Arrays.fill(low, Integer.MIN_VALUE);
-        java.util.Arrays.fill(high, Integer.MAX_VALUE);
+        Arrays.fill(low, Integer.MIN_VALUE);
+        Arrays.fill(high, Integer.MAX_VALUE);
         int anchor = -1;
         for (int i = 0; i < n; i++) {
             if (fixed[i]) anchor = i;
