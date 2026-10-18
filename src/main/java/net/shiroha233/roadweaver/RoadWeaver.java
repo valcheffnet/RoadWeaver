@@ -1,50 +1,56 @@
 package net.shiroha233.roadweaver;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.shiroha233.roadweaver.command.MapAccessCommand;
 import net.shiroha233.roadweaver.command.RoadWeaverCommand;
 import net.shiroha233.roadweaver.config.ConfigService;
 import net.shiroha233.roadweaver.features.config.RoadFeatureRegistry;
-import net.shiroha233.roadweaver.network.fabric.MapNetworkFabric;
+import net.shiroha233.roadweaver.network.neoforge.MapNetworkNeoForge;
 import net.shiroha233.roadweaver.persistence.attachments.WorldDataAttachment;
-import net.shiroha233.roadweaver.planning.fabric.ServerPlanningHooks;
-import net.shiroha233.roadweaver.structures.fabric.StructureRegistryFabric;
+import net.shiroha233.roadweaver.planning.neoforge.ServerPlanningHooks;
+import net.shiroha233.roadweaver.structures.neoforge.StructureRegistryNeoForge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * RoadWeaver 模组主类 (Fabric)
+ * RoadWeaver 模组主类 (NeoForge)
  */
-public class RoadWeaver implements ModInitializer {
+@Mod(RoadWeaver.MOD_ID)
+public class RoadWeaver {
     public static final String MOD_ID = "roadweaver";
     private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    @Override
-    public void onInitialize() {
-        LOGGER.info("Initializing RoadWeaver (Fabric)...");
-        
-        WorldDataAttachment.registerWorldDataAttachment();
-        
+    public RoadWeaver(IEventBus modBus) {
+        LOGGER.info("Initializing RoadWeaver (NeoForge)...");
+
+        WorldDataAttachment.register(modBus);
+
         ConfigService.load();
         LOGGER.info("Configuration loaded");
-        
-        StructureRegistryFabric.register();
-        LOGGER.info("Structure types registered");
-        
-        RoadFeatureRegistry.register();
 
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            RoadWeaverCommand.register(dispatcher);
-            MapAccessCommand.register(dispatcher);
-        });
+        StructureRegistryNeoForge.register(modBus);
+        RoadFeatureRegistry.register(modBus);
+        MapNetworkNeoForge.register(modBus);
 
-        MapNetworkFabric.registerServerReceivers();
+        NeoForge.EVENT_BUS.addListener(RoadWeaver::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(RoadWeaver::onPlayerLoggedIn);
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
-                MapNetworkFabric.syncMapAccess(handler.player));
-        
         ServerPlanningHooks.register();
+    }
+
+    private static void onRegisterCommands(RegisterCommandsEvent event) {
+        RoadWeaverCommand.register(event.getDispatcher());
+        MapAccessCommand.register(event.getDispatcher());
+    }
+
+    private static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            MapNetworkNeoForge.syncMapAccess(player);
+        }
     }
 }

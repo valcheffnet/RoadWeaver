@@ -2,7 +2,7 @@ package net.shiroha233.roadweaver.config.structure;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 import net.shiroha233.roadweaver.persistence.files.FileStorageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,7 +173,7 @@ public final class StructureSelectionConfig {
     // ==================== 持久化 ====================
 
     private Path getConfigFilePath() {
-        return FabricLoader.getInstance().getConfigDir().resolve("roadweaver").resolve(CONFIG_FILE);
+        return FMLPaths.CONFIGDIR.get().resolve("roadweaver").resolve(CONFIG_FILE);
     }
 
     public void save() {

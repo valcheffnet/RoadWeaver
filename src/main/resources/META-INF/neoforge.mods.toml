@@ -1,0 +1,45 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+issueTrackerURL = "https://github.com/shiroha-233/RoadWeaver/issues"
+
+[[mods]]
+modId = "roadweaver"
+version = "${version}"
+displayName = "RoadWeaver"
+authors = "shiroha233"
+credits = "Countered (settlement-roads-new, CC0-1.0); SasnycoN (26.2 port)"
+displayURL = "https://github.com/shiroha-233/RoadWeaver"
+logoFile = "assets/roadweaver/icon.png"
+# Players without the mod can join a server that runs it, and the other way round.
+displayTest = "IGNORE_ALL_VERSION"
+description = '''
+Generates roads between villages and other structures. 26.2 port of RoadWeaver 2.3.2: install it on the client for the road map and settings screens; vanilla clients can still join a server that runs it.
+'''
+
+[[mixins]]
+config = "roadweaver.mixins.json"
+
+[[mixins]]
+config = "roadweaver.client.mixins.json"
+
+[[dependencies.roadweaver]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neo_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.roadweaver]]
+modId = "minecraft"
+type = "required"
+versionRange = "[${minecraft_version},26.3)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.roadweaver]]
+modId = "cloth_config"
+type = "optional"
+versionRange = "[${cloth_config_version},)"
+ordering = "NONE"
+side = "CLIENT"

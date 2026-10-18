@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 final class StructureTemplateFiles {
-    static final Path ROOT = Path.of("src/main/resources/data/roadweaver/structure");
+    // The NeoForge test runner starts in its own game folder, so the project folder comes in as a property.
+    static final Path ROOT = Path.of(System.getProperty("roadweaver.projectDir", "."))
+            .resolve("src/main/resources/data/roadweaver/structure");
 
     private StructureTemplateFiles() {}
 

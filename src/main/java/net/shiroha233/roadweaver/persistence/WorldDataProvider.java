@@ -3,7 +3,7 @@ package net.shiroha233.roadweaver.persistence;
 import net.shiroha233.roadweaver.core.model.StructureConnection;
 import net.shiroha233.roadweaver.core.model.StructureInfo;
 import net.shiroha233.roadweaver.core.model.StructureLocationData;
-import net.shiroha233.roadweaver.persistence.fabric.WorldDataProviderImpl;
+import net.shiroha233.roadweaver.persistence.neoforge.WorldDataProviderImpl;
 import net.shiroha233.roadweaver.persistence.files.StructureFileStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;

@@ -16,7 +16,8 @@ import net.shiroha233.roadweaver.features.path.decoration.material.WoodSelector;
 
 /**
  * The terrain is raised under a road only a few blocks deep, so where a road crosses a deeper dip or runs past a cliff
- * edge its surface ends up on a thin sheet of dirt over open air. Gaps of up to {@link #MAX_EMBANKMENT_GAP} blocks are
+ * edge its surface ends up on a thin sheet of dirt over open air. Gaps that do not open to the side (a cave under the
+ * road) are left alone. Gaps of up to {@link #MAX_EMBANKMENT_GAP} blocks are
  * filled with dirt like a low embankment. Over a deeper gap the road becomes a deck: wooden planks, or stone bricks on
  * a stone road, with the hanging dirt under it removed and posts down to the ground every few blocks, fences where
  * the deck is low and stone brick pillars where it is high.
@@ -27,6 +28,8 @@ public final class RoadSupports {
     private static final int MAX_DROP = 32;
     private static final int MAX_FENCE_POST = 4;
     private static final int POST_SPACING = 3;
+    /** How far beside the road the side of a platform is looked for. */
+    private static final int SIDE_REACH = 3;
 
     private RoadSupports() {}
 
@@ -59,6 +62,10 @@ public final class RoadSupports {
         }
         if (gap >= MAX_DROP) return;
 
+        // A road over a cave keeps its ground: only a gap that opens to the side, where the sheet hangs over a dip or
+        // a slope, is a platform anyone can see.
+        if (!openToTheSide(world, surface, gapTop)) return;
+
         if (gap <= MAX_EMBANKMENT_GAP) {
             for (int k = 0; k < gap; k++) world.setBlock(gapTop.below(k), Blocks.DIRT.defaultBlockState(), 3);
             return;
@@ -87,6 +94,21 @@ public final class RoadSupports {
             if (!isOpen(world, at)) break;
             world.setBlock(at, post, 3);
         }
+    }
+
+    /** True when, within a few blocks beside the road, a column is open from the road surface down to the gap. */
+    private static boolean openToTheSide(WorldGenLevel world, BlockPos surface, BlockPos gapTop) {
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            for (int d = 1; d <= SIDE_REACH; d++) {
+                BlockPos column = surface.relative(dir, d);
+                boolean open = true;
+                for (int y = surface.getY(); y >= gapTop.getY() && open; y--) {
+                    open = isOpen(world, column.atY(y));
+                }
+                if (open) return true;
+            }
+        }
+        return false;
     }
 
     private static boolean isOpen(WorldGenLevel world, BlockPos pos) {

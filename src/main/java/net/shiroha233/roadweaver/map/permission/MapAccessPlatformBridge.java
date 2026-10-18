@@ -1,6 +1,6 @@
 package net.shiroha233.roadweaver.map.permission;
 
-import net.shiroha233.roadweaver.map.permission.fabric.MapAccessPlatformBridgeImpl;
+import net.shiroha233.roadweaver.map.permission.neoforge.MapAccessPlatformBridgeImpl;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 

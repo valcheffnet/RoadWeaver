@@ -5,15 +5,15 @@
   "compatibilityLevel": "JAVA_${java_version}",
   "plugin": "net.shiroha233.roadweaver.mixin.MixinConfigPlugin",
   "mixins": [
-    "fabric.MinecraftServerMixin",
-    "fabric.TreeFeatureMixin",
-    "fabric.HugeFungusFeatureMixin",
-    "fabric.BambooFeatureMixin",
-    "fabric.GenericVegetationFeatureMixin",
-    "fabric.ServerLevelStructureMixin",
-    "fabric.PlayerListPermissionMixin",
-    "fabric.BeardifierMixin",
-    "fabric.StructureManagerAccessor"
+    "neoforge.MinecraftServerMixin",
+    "neoforge.TreeFeatureMixin",
+    "neoforge.HugeFungusFeatureMixin",
+    "neoforge.BambooFeatureMixin",
+    "neoforge.GenericVegetationFeatureMixin",
+    "neoforge.ServerLevelStructureMixin",
+    "neoforge.PlayerListPermissionMixin",
+    "neoforge.BeardifierMixin",
+    "neoforge.StructureManagerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

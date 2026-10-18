@@ -1,6 +1,6 @@
 package net.shiroha233.roadweaver.mixin;
 
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.LoadingModList;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -35,7 +35,8 @@ public class MixinConfigPlugin implements IMixinConfigPlugin {
     }
 
     private boolean isModLoaded(String modid) {
-        return FabricLoader.getInstance().isModLoaded(modid);
+        // ModList is not ready while mixins are configured; the loading list is.
+        return LoadingModList.get().getModFileById(modid) != null;
     }
 
     @Override

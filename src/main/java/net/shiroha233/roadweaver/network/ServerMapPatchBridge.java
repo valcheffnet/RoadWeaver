@@ -1,6 +1,6 @@
 package net.shiroha233.roadweaver.network;
 
-import net.shiroha233.roadweaver.network.fabric.ServerMapPatchBridgeImpl;
+import net.shiroha233.roadweaver.network.neoforge.ServerMapPatchBridgeImpl;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.shiroha233.roadweaver.client.map.data.MapSnapshotPatch;

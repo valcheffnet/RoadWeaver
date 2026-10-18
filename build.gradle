@@ -1,60 +1,52 @@
 plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
+	id 'java-library'
+	id 'net.neoforged.moddev' version "${moddev_version}"
 }
 
 base {
-	archivesName = 'roadweaver'
+	archivesName = 'roadweaver-neoforge'
 }
 
 repositories {
 	maven { url = 'https://maven.shedaniel.me/' }
-	maven { url = 'https://maven.terraformersmc.com/releases/' }
 }
 
-loom {
-	// Client code lives in src/client; main must never reference it, so dedicated servers and vanilla clients keep working.
-	splitEnvironmentSourceSets()
+neoForge {
+	version = project.neo_version
+
+	runs {
+		client {
+			client()
+			gameDirectory = project.file('run-client')
+		}
+		server {
+			server()
+			gameDirectory = project.file('run')
+			programArgument '--nogui'
+		}
+	}
 
 	mods {
 		roadweaver {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
+			sourceSet(sourceSets.main)
 		}
 	}
 
-	runs {
-		// Own folder so a dev client and the dev server in run/ can run side by side
-		client {
-			runDir = "run-client"
-		}
-		signTest {
-			server()
-			runDir = "run-sign"
-		}
-	}
-}
-
-fabricApi {
-	configureTests {
-		createSourceSet = true
-		modId = "roadweaver-test"
-		enableGameTests = false
-		enableClientGameTests = true
-		eula = true
+	// Unit tests use Minecraft classes (BlockPos, Identifier and so on)
+	unitTest {
+		enable()
+		testedMod = mods.roadweaver
 	}
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-	// Config screen (client only at runtime, bundled so players need no extra download)
-	implementation("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
-		exclude group: "net.fabricmc.fabric-api"
+	// Config screen, used on the client only; bundled so players need no extra download
+	jarJar(implementation("me.shedaniel.cloth:cloth-config-neoforge")) {
+		version {
+			strictly "[${project.cloth_config_version},)"
+			prefer project.cloth_config_version
+		}
 	}
-	include "me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}"
-	compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:${project.junit_version}"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher"
@@ -63,12 +55,14 @@ dependencies {
 def templateProps = [
 	version          : project.version,
 	minecraft_version: project.minecraft_version,
+	neo_version      : project.neo_version,
 	java_version     : project.java_version,
+	cloth_config_version: project.cloth_config_version,
 ]
 
 tasks.withType(ProcessResources).configureEach {
 	inputs.properties templateProps
-	filesMatching(["fabric.mod.json", "*.mixins.json"]) {
+	filesMatching(["META-INF/neoforge.mods.toml", "*.mixins.json"]) {
 		expand templateProps
 	}
 }
@@ -76,27 +70,19 @@ tasks.withType(ProcessResources).configureEach {
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = 'UTF-8'
 	it.options.release = project.java_version as int
-	// Show every error, not just the first 100 (the port touches many files at once).
 	it.options.compilerArgs += ['-Xmaxerrs', '10000']
 }
 
 tasks.withType(Test).configureEach {
 	useJUnitPlatform()
+	// Template tests read src/main/resources from the project folder
+	systemProperty 'roadweaver.projectDir', project.projectDir.absolutePath
 	// StructureTemplateUpgradeTool only runs when asked: -Droadweaver.upgradeTemplates=true
 	systemProperty 'roadweaver.upgradeTemplates', System.getProperty('roadweaver.upgradeTemplates', 'false')
 }
 
-sourceSets {
-	// Map and UI tests exercise client classes
-	test {
-		compileClasspath += sourceSets.client.output + sourceSets.client.compileClasspath
-		runtimeClasspath += sourceSets.client.output + sourceSets.client.runtimeClasspath
-	}
-}
-
 java {
-	sourceCompatibility = JavaVersion.toVersion(project.java_version)
-	targetCompatibility = JavaVersion.toVersion(project.java_version)
+	toolchain.languageVersion = JavaLanguageVersion.of(project.java_version as int)
 	withSourcesJar()
 }
 

@@ -2,7 +2,7 @@ package net.shiroha233.roadweaver.config.structure;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
@@ -230,7 +230,7 @@ public final class StructureDiscoveryService {
     // ==================== 缓存文件操作 ====================
 
     private static Path getCacheFilePath() {
-        return FabricLoader.getInstance().getConfigDir().resolve("roadweaver").resolve(CACHE_FILE);
+        return FMLPaths.CONFIGDIR.get().resolve("roadweaver").resolve(CACHE_FILE);
     }
 
     private static void saveCacheToFile() {
