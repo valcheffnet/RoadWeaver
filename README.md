@@ -1,4 +1,18 @@
 # RoadWeaver
+
+> **This is an unofficial fork of [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver).** It runs RoadWeaver 2.3.2 on Minecraft 26.2, for Fabric and NeoForge. The original mod and its own downloads are linked below; they do not have a 26.2 version.
+>
+> **Download for 26.2:** [latest release](https://github.com/valcheffnet/RoadWeaver/releases/latest)
+>
+> | Loader | File | Also needs |
+> |---|---|---|
+> | Fabric | `roadweaver-fabric-…+26.2.jar` | Fabric API |
+> | NeoForge | `roadweaver-neoforge-…+26.2.jar` | NeoForge 26.2.0.93 or later |
+>
+> Put the jar on the server and players can join with an unmodded client; add it to the client as well for the road map and the settings screens. In single player, install it on the client. What this fork changes is in [docs/fork-26.2.md](docs/fork-26.2.md). Please report problems with these builds in this repository's [issues](https://github.com/valcheffnet/RoadWeaver/issues), not upstream.
+>
+> The rest of this page is the original README.
+
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/6jk8Pote?style=flat-square&logo=Modrinth&label=Modrinth)](https://modrinth.com/mod/roadweaver)
 [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1358489?style=flat-square&logo=CurseForge&label=CurseForge&color=f16436)](https://www.curseforge.com/minecraft/mc-mods/roadweaver)
 [![Discord Invite](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white&style=flat-square)](https://discord.gg/tUJMJkbbr2)
