@@ -1,4 +1,9 @@
 # RoadWeaver
+
+> **This is an unofficial fork of [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver).** This branch is a server-side build of RoadWeaver 2.3.2 for Minecraft 26.3 on Fabric: players join with an unmodded client. There is no release for it yet; how to build and configure it is in [docs/server-side-26.3.md](docs/server-side-26.3.md). For Minecraft 26.2 there are ready builds for Fabric and NeoForge under [releases](https://github.com/valcheffnet/RoadWeaver/releases/latest).
+>
+> The rest of this page is the original README.
+
 [![Modrinth Downloads](https://img.shields.io/modrinth/dt/6jk8Pote?style=flat-square&logo=Modrinth&label=Modrinth)](https://modrinth.com/mod/roadweaver)
 [![CurseForge Downloads](https://img.shields.io/curseforge/dt/1358489?style=flat-square&logo=CurseForge&label=CurseForge&color=f16436)](https://www.curseforge.com/minecraft/mc-mods/roadweaver)
 [![Discord Invite](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white&style=flat-square)](https://discord.gg/tUJMJkbbr2)
