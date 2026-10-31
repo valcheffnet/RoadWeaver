@@ -1,15 +1,20 @@
 # RoadWeaver
 
-> **This is an unofficial fork of [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver).** It runs RoadWeaver 2.3.2 on Minecraft 26.2, for Fabric and NeoForge. The original mod and its own downloads are linked below; they do not have a 26.2 version.
+> **This is an unofficial fork of [shiroha-233/RoadWeaver](https://github.com/shiroha-233/RoadWeaver).** It runs RoadWeaver 2.3.2 on Minecraft versions the original does not have yet. The original mod and its own downloads are linked further down.
 >
-> **Download for 26.2:** [latest release](https://github.com/valcheffnet/RoadWeaver/releases/latest)
+> | Minecraft | Loader | Where to get it | Branch |
+> |---|---|---|---|
+> | 26.2 | Fabric | [Latest release](https://github.com/valcheffnet/RoadWeaver/releases/latest), file `roadweaver-fabric-…+26.2.jar`. Needs Fabric API. | [`26.2-fabric`](https://github.com/valcheffnet/RoadWeaver/tree/26.2-fabric) |
+> | 26.2 | NeoForge | [Latest release](https://github.com/valcheffnet/RoadWeaver/releases/latest), file `roadweaver-neoforge-…+26.2.jar`. Needs NeoForge 26.2.0.93 or later. | [`26.2-neoforge`](https://github.com/valcheffnet/RoadWeaver/tree/26.2-neoforge) |
+> | 26.3 | Fabric, server only | No release yet. Build it from the branch as described in [docs/server-side-26.3.md](https://github.com/valcheffnet/RoadWeaver/blob/26.3-server/docs/server-side-26.3.md). Needs Fabric API. | [`26.3-server`](https://github.com/valcheffnet/RoadWeaver/tree/26.3-server) |
 >
-> | Loader | File | Also needs |
-> |---|---|---|
-> | Fabric | `roadweaver-fabric-…+26.2.jar` | Fabric API |
-> | NeoForge | `roadweaver-neoforge-…+26.2.jar` | NeoForge 26.2.0.93 or later |
+> The 26.2 jar can go on the server alone, and players join with an unmodded client. Add it to the client as well for the road map and the settings screens. In single player, install it on the client. What changed for 26.2 is in [docs/fork-26.2.md](https://github.com/valcheffnet/RoadWeaver/blob/26.2-fabric/docs/fork-26.2.md).
 >
-> Put the jar on the server and players can join with an unmodded client; add it to the client as well for the road map and the settings screens. In single player, install it on the client. What this fork changes is in [docs/fork-26.2.md](docs/fork-26.2.md). Please report problems with these builds in this repository's [issues](https://github.com/valcheffnet/RoadWeaver/issues), not upstream.
+> The 26.3 build runs only on a dedicated server. It has no map and no settings screens; the config is edited as JSON.
+>
+> The other branches are either copies of upstream (`1.20.1-…` to `1.21.11-…`) or fixes sent upstream as pull requests (`fix/…`). They are not builds of this fork.
+>
+> Please report problems with these builds in this repository's [issues](https://github.com/valcheffnet/RoadWeaver/issues), not upstream.
 >
 > The rest of this page is the original README.
 
