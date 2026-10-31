@@ -6,7 +6,7 @@
 > |---|---|---|---|
 > | 26.2 | Fabric | [Latest release](https://github.com/valcheffnet/RoadWeaver/releases/latest), file `roadweaver-fabric-…+26.2.jar`. Needs Fabric API. | [`26.2-fabric`](https://github.com/valcheffnet/RoadWeaver/tree/26.2-fabric) |
 > | 26.2 | NeoForge | [Latest release](https://github.com/valcheffnet/RoadWeaver/releases/latest), file `roadweaver-neoforge-…+26.2.jar`. Needs NeoForge 26.2.0.93 or later. | [`26.2-neoforge`](https://github.com/valcheffnet/RoadWeaver/tree/26.2-neoforge) |
-> | 26.3 | Fabric, server only | No release yet. Build it from the branch as described in [docs/server-side-26.3.md](https://github.com/valcheffnet/RoadWeaver/blob/26.3-server/docs/server-side-26.3.md). Needs Fabric API. | [`26.3-server`](https://github.com/valcheffnet/RoadWeaver/tree/26.3-server) |
+> | 26.3 | Fabric, server only | [Release 2.3.2-server.1+26.3](https://github.com/valcheffnet/RoadWeaver/releases/tag/2.3.2-server.1%2B26.3), file `roadweaver-server-…+26.3.jar`. Needs Fabric API. Install and config are in [docs/server-side-26.3.md](https://github.com/valcheffnet/RoadWeaver/blob/26.3-server/docs/server-side-26.3.md). | [`26.3-server`](https://github.com/valcheffnet/RoadWeaver/tree/26.3-server) |
 >
 > The 26.2 jar can go on the server alone, and players join with an unmodded client. Add it to the client as well for the road map and the settings screens. In single player, install it on the client. What changed for 26.2 is in [docs/fork-26.2.md](https://github.com/valcheffnet/RoadWeaver/blob/26.2-fabric/docs/fork-26.2.md).
 >
